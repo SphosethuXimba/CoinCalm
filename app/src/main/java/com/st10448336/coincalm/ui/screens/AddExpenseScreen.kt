@@ -4,6 +4,8 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,11 +21,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.st10448336.coincalm.data.AppDatabase
 import com.st10448336.coincalm.data.entites.Category
 import com.st10448336.coincalm.data.entites.Expense
+import com.st10448336.coincalm.data.repository.StorageRepository
 import com.st10448336.coincalm.ui.theme.ErrorRed
 import com.st10448336.coincalm.ui.theme.LimeGreen
 import com.st10448336.coincalm.ui.theme.NavyDark
@@ -38,51 +42,33 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.Calendar
 
-/**
- * AddExpenseScreen — Skeleton screen for logging a new expense.
- *
- * REQUIREMENT-03: Expense Entry with Media Capture.
- *
- * ── SUPABASE IMAGE UPLOAD ─────────────────────────────────────────────────────
- * TODO (Team): Before inserting the Expense into RoomDB, upload [selectedImageUri]
- * to the Supabase "receipts" bucket. Set [supabaseImageUrl] to the returned
- * public URL. The DB insert at the bottom already reads from [supabaseImageUrl].
- *
- * Pseudocode:
- *   val bytes = context.contentResolver.openInputStream(selectedImageUri)?.readBytes()
- *   supabaseClient.storage.from("receipts").upload("${uid}_${System.currentTimeMillis()}.jpg", bytes)
- *   supabaseImageUrl = supabaseClient.storage.from("receipts").publicUrl(fileName)
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * @author Sphosethu Ximba [ST10448336] — PROG7313 POE Part 2
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(navController: NavController) {
 
-    val TAG          = "AddExpenseScreen"
-    val context      = LocalContext.current
-    val scope        = rememberCoroutineScope()
-    val focusManager = LocalFocusManager.current
+    val TAG               = "AddExpenseScreen"
+    val context           = LocalContext.current
+    val scope             = rememberCoroutineScope()
+    val focusManager      = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // ── Compose State ──────────────────────────────────────────────────────
-    var amount       by remember { mutableStateOf("") }
-    var date         by remember { mutableStateOf("") }
-    var startTime    by remember { mutableStateOf("") }
-    var endTime      by remember { mutableStateOf("") }
-    var description  by remember { mutableStateOf("") }
-    var categories   by remember { mutableStateOf<List<Category>>(emptyList()) }
+    var amount           by remember { mutableStateOf("") }
+    var date             by remember { mutableStateOf("") }
+    var startTime        by remember { mutableStateOf("") }
+    var endTime          by remember { mutableStateOf("") }
+    var description      by remember { mutableStateOf("") }
+    var categories       by remember { mutableStateOf<List<Category>>(emptyList()) }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var dropdownExpanded by remember { mutableStateOf(false) }
-    var isLoading    by remember { mutableStateOf(false) }
-    var photoUri     by remember { mutableStateOf<Uri?>(null) }
-    var photoStatus  by remember { mutableStateOf("No photo attached") }
-
-    // Supabase public URL — set by the upload TODO block below
+    var isLoading        by remember { mutableStateOf(false) }
+    var isUploading      by remember { mutableStateOf(false) }
+    var photoStatus      by remember { mutableStateOf("No photo attached") }
     var supabaseImageUrl by remember { mutableStateOf<String?>(null) }
+    var pendingImageUri  by remember { mutableStateOf<Uri?>(null) }
 
     // Field error states
     var amountError      by remember { mutableStateOf<String?>(null) }
@@ -90,6 +76,46 @@ fun AddExpenseScreen(navController: NavController) {
     var startTimeError   by remember { mutableStateOf<String?>(null) }
     var endTimeError     by remember { mutableStateOf<String?>(null) }
     var descriptionError by remember { mutableStateOf<String?>(null) }
+
+    // ── Camera launcher ────────────────────────────────────────────────────
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            val uri = pendingImageUri
+            if (uri != null) {
+                isUploading = true
+                photoStatus = "Uploading receipt…"
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        val inputStream = context.contentResolver.openInputStream(uri)!!
+                        val tempFile = File(
+                            context.cacheDir,
+                            "upload_${System.currentTimeMillis()}.jpg"
+                        )
+                        tempFile.outputStream().use { out -> inputStream.copyTo(out) }
+
+                        val url = StorageRepository.uploadReceipt(tempFile)
+                        Log.d(TAG, "✅ Receipt uploaded: $url")
+
+                        withContext(Dispatchers.Main) {
+                            supabaseImageUrl = url
+                            photoStatus      = "✅ Photo uploaded successfully"
+                            isUploading      = false
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ Upload failed: ${e.message}", e)
+                        withContext(Dispatchers.Main) {
+                            photoStatus = "❌ Upload failed — expense will save without photo"
+                            isUploading = false
+                        }
+                    }
+                }
+            }
+        } else {
+            photoStatus = "No photo taken"
+        }
+    }
 
     // ── Pre-fill date with today ───────────────────────────────────────────
     LaunchedEffect(Unit) {
@@ -112,7 +138,6 @@ fun AddExpenseScreen(navController: NavController) {
         }
     }
 
-    // Save button enabled when all required fields are non-blank
     val isSaveEnabled = amount.isNotBlank()
             && date.isNotBlank()
             && startTime.isNotBlank()
@@ -120,6 +145,7 @@ fun AddExpenseScreen(navController: NavController) {
             && description.isNotBlank()
             && selectedCategory != null
             && !isLoading
+            && !isUploading
 
     Scaffold(
         snackbarHost   = { SnackbarHost(snackbarHostState) },
@@ -148,14 +174,16 @@ fun AddExpenseScreen(navController: NavController) {
                     amountError = if (it.toFloatOrNull() == null && it.isNotEmpty())
                         "Enter a valid amount" else null
                 },
-                label         = { Text("Amount") },
-                isError       = amountError != null,
+                label          = { Text("Amount") },
+                isError        = amountError != null,
                 supportingText = amountError?.let { { Text(it, color = ErrorRed) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Decimal,
                     imeAction    = ImeAction.Next
                 ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) }),
+                keyboardActions = KeyboardActions(onNext = {
+                    focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down)
+                }),
                 singleLine = true,
                 enabled    = !isLoading,
                 colors     = coinCalmTextFieldColors(),
@@ -164,16 +192,16 @@ fun AddExpenseScreen(navController: NavController) {
 
             // ── Date picker ────────────────────────────────────────────────
             OutlinedTextField(
-                value         = date,
-                onValueChange = {},
-                label         = { Text("Date (YYYY-MM-DD)") },
-                isError       = dateError != null,
+                value          = date,
+                onValueChange  = {},
+                label          = { Text("Date (YYYY-MM-DD)") },
+                isError        = dateError != null,
                 supportingText = dateError?.let { { Text(it, color = ErrorRed) } },
-                readOnly      = true,
-                enabled       = !isLoading,
-                colors        = coinCalmTextFieldColors(),
-                modifier      = Modifier.fillMaxWidth(),
-                trailingIcon  = {
+                readOnly       = true,
+                enabled        = !isLoading,
+                colors         = coinCalmTextFieldColors(),
+                modifier       = Modifier.fillMaxWidth(),
+                trailingIcon   = {
                     TextButton(onClick = {
                         val cal = Calendar.getInstance()
                         DatePickerDialog(
@@ -181,7 +209,6 @@ fun AddExpenseScreen(navController: NavController) {
                             { _, y, m, d ->
                                 date = "%04d-%02d-%02d".format(y, m + 1, d)
                                 dateError = null
-                                Log.d(TAG, "Date selected: $date")
                             },
                             cal.get(Calendar.YEAR),
                             cal.get(Calendar.MONTH),
@@ -191,7 +218,7 @@ fun AddExpenseScreen(navController: NavController) {
                 }
             )
 
-            // ── Start time / End time side by side ─────────────────────────
+            // ── Start time / End time ──────────────────────────────────────
             Row(
                 modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -211,9 +238,8 @@ fun AddExpenseScreen(navController: NavController) {
                             TimePickerDialog(
                                 context,
                                 { _, h, min ->
-                                    startTime = "%02d:%02d".format(h, min)
+                                    startTime      = "%02d:%02d".format(h, min)
                                     startTimeError = null
-                                    Log.d(TAG, "Start time: $startTime")
                                 },
                                 cal.get(Calendar.HOUR_OF_DAY),
                                 cal.get(Calendar.MINUTE), true
@@ -236,9 +262,8 @@ fun AddExpenseScreen(navController: NavController) {
                             TimePickerDialog(
                                 context,
                                 { _, h, min ->
-                                    endTime = "%02d:%02d".format(h, min)
+                                    endTime      = "%02d:%02d".format(h, min)
                                     endTimeError = null
-                                    Log.d(TAG, "End time: $endTime")
                                 },
                                 cal.get(Calendar.HOUR_OF_DAY),
                                 cal.get(Calendar.MINUTE), true
@@ -252,11 +277,11 @@ fun AddExpenseScreen(navController: NavController) {
             OutlinedTextField(
                 value         = description,
                 onValueChange = {
-                    description = it
+                    description      = it
                     descriptionError = null
                 },
-                label         = { Text("Description") },
-                isError       = descriptionError != null,
+                label          = { Text("Description") },
+                isError        = descriptionError != null,
                 supportingText = descriptionError?.let { { Text(it, color = ErrorRed) } },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
@@ -277,20 +302,24 @@ fun AddExpenseScreen(navController: NavController) {
                     onValueChange = {},
                     readOnly      = true,
                     label         = { Text("Category") },
-                    trailingIcon  = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
-                    colors        = coinCalmTextFieldColors(),
-                    modifier      = Modifier
+                    trailingIcon  = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
+                    },
+                    colors   = coinCalmTextFieldColors(),
+                    modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
                 )
                 ExposedDropdownMenu(
                     expanded         = dropdownExpanded,
                     onDismissRequest = { dropdownExpanded = false },
-                    modifier = Modifier.background(NavyMedium)
+                    modifier         = Modifier.background(NavyMedium)
                 ) {
                     if (categories.isEmpty()) {
                         DropdownMenuItem(
-                            text    = { Text("No categories yet — create one first", color = TextSecondary) },
+                            text    = {
+                                Text("No categories yet — create one first", color = TextSecondary)
+                            },
                             onClick = {}
                         )
                     }
@@ -307,25 +336,54 @@ fun AddExpenseScreen(navController: NavController) {
                 }
             }
 
-            // ── Photo button ───────────────────────────────────────────────
-            Text("Receipt Photo (optional)", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            // ── Photo section ──────────────────────────────────────────────
+            Text(
+                "Receipt Photo (optional)",
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             OutlinedButton(
                 onClick = {
-                    // TODO (Team): Launch camera via ActivityResultContracts.TakePicture()
-                    // TODO (Team): Create a FileProvider URI before calling cameraLauncher.launch(uri)
-                    Log.d(TAG, "TODO (Team): Launch camera — implement FileProvider URI for camera capture")
-                    Log.d(TAG, "TODO (Team): On camera success, call Supabase upload with the captured URI")
-                    photoStatus = "Camera — add FileProvider to enable"
+                    val photoFile = File(
+                        context.cacheDir,
+                        "receipt_${System.currentTimeMillis()}.jpg"
+                    )
+                    val uri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.provider",
+                        photoFile
+                    )
+                    pendingImageUri = uri
+                    cameraLauncher.launch(uri)
                 },
-                border  = androidx.compose.foundation.BorderStroke(1.dp, LimeGreen),
-                shape   = RoundedCornerShape(10.dp),
+                enabled  = !isLoading && !isUploading,
+                border   = androidx.compose.foundation.BorderStroke(1.dp, LimeGreen),
+                shape    = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("📷  Take Photo", color = LimeGreen)
+                if (isUploading) {
+                    CircularProgressIndicator(
+                        color       = LimeGreen,
+                        modifier    = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Uploading…", color = LimeGreen)
+                } else {
+                    Text("📷  Take Photo", color = LimeGreen)
+                }
             }
 
-            Text(photoStatus, color = TextSecondary, style = MaterialTheme.typography.labelSmall)
+            Text(
+                text  = photoStatus,
+                color = when {
+                    photoStatus.startsWith("✅") -> LimeGreen
+                    photoStatus.startsWith("❌") -> ErrorRed
+                    else                         -> TextSecondary
+                },
+                style = MaterialTheme.typography.labelSmall
+            )
 
             Spacer(Modifier.height(6.dp))
 
@@ -335,44 +393,35 @@ fun AddExpenseScreen(navController: NavController) {
                     focusManager.clearFocus()
                     val uid = FirebaseAuth.getInstance().currentUser?.uid
                     if (uid == null) {
-                        scope.launch { snackbarHostState.showSnackbar("Session error — please log in again") }
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Session error — please log in again")
+                        }
                         return@Button
                     }
 
-                    // Re-validate before saving
                     var valid = true
-                    if (amount.toFloatOrNull() == null) { amountError = "Enter a valid amount"; valid = false }
-                    if (date.isBlank())        { dateError = "Date is required"; valid = false }
-                    if (startTime.isBlank())   { startTimeError = "Required"; valid = false }
-                    if (endTime.isBlank())     { endTimeError = "Required"; valid = false }
+                    if (amount.toFloatOrNull() == null) {
+                        amountError = "Enter a valid amount"; valid = false
+                    }
+                    if (date.isBlank())        { dateError        = "Date is required"; valid = false }
+                    if (startTime.isBlank())   { startTimeError   = "Required";         valid = false }
+                    if (endTime.isBlank())     { endTimeError     = "Required";         valid = false }
                     if (description.isBlank()) { descriptionError = "Description is required"; valid = false }
                     if (!valid) return@Button
 
                     isLoading = true
                     scope.launch(Dispatchers.IO) {
-
-                        // ==================================================================
-                        // TODO (Team): SUPABASE UPLOAD — Upload photo BEFORE DB insert
-                        // ==================================================================
-                        // if (photoUri != null) {
-                        //     Log.d(TAG, "TODO (Team): Upload $photoUri to Supabase 'receipts' bucket")
-                        //     // supabaseImageUrl = uploadToSupabase(context, photoUri!!, uid)
-                        // }
-                        Log.d(TAG, "TODO (Team): Supabase image upload goes here — set supabaseImageUrl = returned URL")
-                        // ==================================================================
-
                         val db = AppDatabase.getInstance(context)
                         val newExpense = Expense(
-                            userId = uid,
-                            categoryId = selectedCategory?.categoryId,
-                            amount = amount.toFloat(),
-                            date = date,
-                            startTime = startTime,
-                            endTime = endTime,
-                            description = description.trim(),
+                            userId           = uid,
+                            categoryId       = selectedCategory?.categoryId,
+                            amount           = amount.toFloat(),
+                            date             = date,
+                            startTime        = startTime,
+                            endTime          = endTime,
+                            description      = description.trim(),
                             supabaseImageUrl = supabaseImageUrl
                         )
-
                         try {
                             val rowId = db.expenseDao().insertExpense(newExpense)
                             Log.d(TAG, "Expense saved. Row ID: $rowId | supabaseUrl: $supabaseImageUrl")

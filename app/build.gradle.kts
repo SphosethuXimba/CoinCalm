@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
 
     // Firebase Google Services — applies google-services.json
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services") version "4.4.2"
 }
 
 android {
@@ -53,8 +53,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
+
+
     // ── Compose BOM — single BOM entry manages all Compose lib versions ───
-    // Only declare it ONCE. Do NOT repeat individual compose entries manually.
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -64,6 +65,13 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+
+//supabase storage setup
+    implementation("io.github.jan-tennert.supabase:supabase-kt:2.5.1")
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.5.1")
+    implementation("io.ktor:ktor-client-okhttp:2.3.12")
+
 
     // Extended icons (used for ArrowBack, etc. in Compose screens)
     implementation("androidx.compose.material:material-icons-extended")
@@ -79,7 +87,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
 
     // ── Room (local offline DB — KSP instead of kapt) ─────────────────────
-    // KSP is faster and avoids the kapt/Kotlin version compatibility issues
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")     // KSP annotation processor
@@ -90,12 +97,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     // ── Firebase Auth ──────────────────────────────────────────────────────
-    // BOM manages Firebase library versions — only declare the BOM once
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth-ktx")
 
     // ── Coil (async image loading for Supabase receipt URLs) ───────────────
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+
+    // allow android to install camera app
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 
     // ── Testing ────────────────────────────────────────────────────────────
     testImplementation(libs.junit)
