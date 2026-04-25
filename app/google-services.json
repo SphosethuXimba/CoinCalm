@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "594892659071",
+    "project_id": "coincalm",
+    "storage_bucket": "coincalm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594892659071:android:a3b93e1c427bf4d948624a",
+        "android_client_info": {
+          "package_name": "com.st10448336.coincalm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM7ZDP-UOIWc_bEil1m_4QVikrDa3RDoc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

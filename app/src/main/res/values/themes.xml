@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Minimal host theme — Compose handles all visual styling -->
+    <style name="Theme.CoinCalm" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#0A1628</item>
+        <item name="android:navigationBarColor">#0A1628</item>
+        <item name="android:windowBackground">#0F1F3D</item>
+    </style>
+</resources>
