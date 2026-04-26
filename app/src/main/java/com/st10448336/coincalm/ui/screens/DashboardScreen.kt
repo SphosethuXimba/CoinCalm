@@ -44,14 +44,12 @@ fun DashboardScreen(navController: NavController) {
     val context = LocalContext.current
     val auth    = FirebaseAuth.getInstance()
 
-    // ── State ──────────────────────────────────────────────────────────────
     var currentUser    by remember { mutableStateOf<User?>(null) }
     var totalSpent     by remember { mutableStateOf(0f) }
     var totalIncome    by remember { mutableStateOf(0f) }
     var recentExpenses by remember { mutableStateOf<List<Expense>>(emptyList()) }
     var categoryNames  by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
 
-    // Re-run every time this screen is (re)entered
     LaunchedEffect(navController.currentBackStackEntry) {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -64,7 +62,6 @@ fun DashboardScreen(navController: NavController) {
 
         withContext(Dispatchers.IO) {
             val db = AppDatabase.getInstance(context)
-
             val user = db.userDao().getUserById(uid)
 
             val cal       = Calendar.getInstance()
@@ -98,346 +95,221 @@ fun DashboardScreen(navController: NavController) {
     val currency = currentUser?.currencyPreference ?: "R"
     val balance  = totalIncome - totalSpent
 
-    // ── Root layout ────────────────────────────────────────────────────────
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(NavyDark)
+            .verticalScroll(rememberScrollState())
     ) {
 
-        // ── Scrollable content ─────────────────────────────────────────────
-        Column(
+        // ── Greeting row ───────────────────────────────────────────────────
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 40.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment     = Alignment.CenterVertically
         ) {
-
-            // ── Greeting row ───────────────────────────────────────────────
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 40.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text     = "Good Morning,",
-                        color    = TextSecondary,
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        text       = currentUser?.username ?: "...",
-                        color      = TextPrimary,
-                        fontSize   = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Avatar initials circle
-                Box(
-                    modifier         = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(LimeGreen),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text       = (currentUser?.username ?: "?").take(2).uppercase(),
-                        color      = NavyDark,
-                        fontWeight = FontWeight.Bold,
-                        fontSize   = 15.sp
-                    )
-                }
+            Column {
+                Text(
+                    text     = "Good Morning,",
+                    color    = TextSecondary,
+                    fontSize = 13.sp
+                )
+                Text(
+                    text       = currentUser?.username ?: "...",
+                    color      = TextPrimary,
+                    fontSize   = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
-
-            // ── Balance card ───────────────────────────────────────────────
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                shape  = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = NavyMedium)
+            Box(
+                modifier         = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(LimeGreen),
+                contentAlignment = Alignment.Center
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text     = "Total Balance:",
-                        color    = TextSecondary,
-                        fontSize = 13.sp
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text       = "$currency ${"%.2f".format(balance)}",
-                        color      = TextPrimary,
-                        fontSize   = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(16.dp))
+                Text(
+                    text       = (currentUser?.username ?: "?").take(2).uppercase(),
+                    color      = NavyDark,
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = 15.sp
+                )
+            }
+        }
 
-                    Row(
-                        modifier              = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        // ── Balance card ───────────────────────────────────────────────────
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            shape  = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = NavyMedium)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(text = "Total Balance:", color = TextSecondary, fontSize = 13.sp)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text       = "$currency ${"%.2f".format(balance)}",
+                    color      = TextPrimary,
+                    fontSize   = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(16.dp))
+                Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape    = RoundedCornerShape(12.dp),
+                        colors   = CardDefaults.cardColors(containerColor = NavyLight)
                     ) {
-                        // Income pill
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            shape    = RoundedCornerShape(12.dp),
-                            colors   = CardDefaults.cardColors(containerColor = NavyLight)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text     = "↑ Income",
-                                    color    = TextSecondary,
-                                    fontSize = 11.sp
-                                )
-                                Text(
-                                    text       = "$currency ${"%.2f".format(totalIncome)}",
-                                    color      = LimeGreen,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize   = 15.sp
-                                )
-                            }
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(text = "↑ Income", color = TextSecondary, fontSize = 11.sp)
+                            Text(
+                                text       = "$currency ${"%.2f".format(totalIncome)}",
+                                color      = LimeGreen,
+                                fontWeight = FontWeight.Bold,
+                                fontSize   = 15.sp
+                            )
                         }
-                        // Expenses pill
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            shape    = RoundedCornerShape(12.dp),
-                            colors   = CardDefaults.cardColors(containerColor = NavyLight)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text     = "↓ Expenses",
-                                    color    = TextSecondary,
-                                    fontSize = 11.sp
-                                )
-                                Text(
-                                    text       = "$currency ${"%.2f".format(totalSpent)}",
-                                    color      = Color(0xFFFF6B6B),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize   = 15.sp
-                                )
-                            }
+                    }
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape    = RoundedCornerShape(12.dp),
+                        colors   = CardDefaults.cardColors(containerColor = NavyLight)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(text = "↓ Expenses", color = TextSecondary, fontSize = 11.sp)
+                            Text(
+                                text       = "$currency ${"%.2f".format(totalSpent)}",
+                                color      = Color(0xFFFF6B6B),
+                                fontWeight = FontWeight.Bold,
+                                fontSize   = 15.sp
+                            )
                         }
                     }
                 }
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            // ── 4 Quick action buttons (2 rows of 2) ──────────────────────
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Row 1 — Expenses & Report
-                Row(
-                    modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    QuickActionButton(
-                        label    = "Expenses",
-                        bgColor  = Color(0xFF1B3A6B),
-                        textIcon = "EXP",
-                        onClick  = { navController.navigate(NavRoutes.AddExpense.route) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        label    = "Report",
-                        bgColor  = Color(0xFF2E4A2E),
-                        textIcon = "RPT",
-                        onClick  = { navController.navigate(NavRoutes.Reports.route) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                // Row 2 — Goals & Badges
-                Row(
-                    modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    QuickActionButton(
-                        label    = "Goals",
-                        bgColor  = Color(0xFF1B4A3A),
-                        textIcon = "AIM",
-                        onClick  = { navController.navigate(NavRoutes.BudgetGoals.route) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        label    = "Badges",
-                        bgColor  = Color(0xFF4A3A1B),
-                        textIcon = "XP",
-                        onClick  = { },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // ── Recent transactions header + Category button ───────────────
-            Row(
-                modifier              = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Text(
-                    text          = "RECENT TRANSACTIONS",
-                    color         = TextSecondary,
-                    fontSize      = 11.sp,
-                    fontWeight    = FontWeight.Bold,
-                    letterSpacing = 0.1.sp
-                )
-                Card(
-                    modifier = Modifier.clickable {
-                        navController.navigate(NavRoutes.AddCategory.route)
-                    },
-                    shape  = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = LimeGreen)
-                ) {
-                    Text(
-                        text       = "+ Category",
-                        color      = NavyDark,
-                        fontSize   = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier   = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // ── Transaction list ───────────────────────────────────────────
-            if (recentExpenses.isEmpty()) {
-                Box(
-                    modifier         = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text      = "No transactions yet.\nTap + to add your first expense.",
-                        color     = TextSecondary,
-                        fontSize  = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                recentExpenses.forEach { expense ->
-                    TransactionRow(
-                        expense      = expense,
-                        categoryName = categoryNames[expense.categoryId] ?: "Uncategorised",
-                        currency     = currency
-                    )
-                }
-            }
-
-            // Space so content clears the nav bar
-            Spacer(Modifier.height(90.dp))
         }
 
-        // ── Bottom nav bar pinned to bottom ───────────────────────────────
-        BottomNavBar(
-            navController = navController,
-            modifier      = Modifier.align(Alignment.BottomCenter)
-        )
-    }
-}
+        Spacer(Modifier.height(12.dp))
 
-// ── Bottom nav bar — Home | + | Settings ──────────────────────────────────────
-@Composable
-private fun BottomNavBar(
-    navController: NavController,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier       = modifier.fillMaxWidth(),
-        color          = NavyMedium,
-        tonalElevation = 4.dp
-    ) {
+        // ── 4 Quick action buttons (2x2 grid) ─────────────────────────────
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuickActionButton(
+                    label    = "Expenses",
+                    bgColor  = Color(0xFF1B3A6B),
+                    textIcon = "EXP",
+                    onClick  = { navController.navigate(NavRoutes.AddExpense.route) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    label    = "Report",
+                    bgColor  = Color(0xFF2E4A2E),
+                    textIcon = "RPT",
+                    onClick  = { navController.navigate(NavRoutes.Reports.route) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuickActionButton(
+                    label    = "Goals",
+                    bgColor  = Color(0xFF1B4A3A),
+                    textIcon = "AIM",
+                    onClick  = { navController.navigate(NavRoutes.BudgetGoals.route) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    label    = "Badges",
+                    bgColor  = Color(0xFF4A3A1B),
+                    textIcon = "XP",
+                    onClick  = { },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // ── Recent transactions header + Category button ───────────────────
         Row(
             modifier              = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically
         ) {
-            // Home
-            BottomNavItem(
-                label    = "Home",
-                icon     = "H",
-                selected = true,
-                onClick  = {}
+            Text(
+                text          = "RECENT TRANSACTIONS",
+                color         = TextSecondary,
+                fontSize      = 11.sp,
+                fontWeight    = FontWeight.Bold,
+                letterSpacing = 0.1.sp
             )
-
-            // Centre FAB
-            FloatingActionButton(
-                onClick        = { navController.navigate(NavRoutes.AddExpense.route) },
-                containerColor = LimeGreen,
-                contentColor   = NavyDark,
-                modifier       = Modifier.size(56.dp)
+            Card(
+                modifier = Modifier.clickable {
+                    navController.navigate(NavRoutes.AddCategory.route)
+                },
+                shape  = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = LimeGreen)
             ) {
                 Text(
-                    text       = "+",
-                    fontSize   = 30.sp,
+                    text       = "+ Category",
+                    color      = NavyDark,
+                    fontSize   = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color      = NavyDark
+                    modifier   = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
-
-            // Settings
-            BottomNavItem(
-                label    = "Settings",
-                icon     = "S",
-                selected = false,
-                onClick  = {
-                    // TODO: navigate to settings screen when built
-                }
-            )
         }
+
+        Spacer(Modifier.height(8.dp))
+
+        // ── Transaction list ───────────────────────────────────────────────
+        if (recentExpenses.isEmpty()) {
+            Box(
+                modifier         = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text      = "No transactions yet.\nTap + to add your first expense.",
+                    color     = TextSecondary,
+                    fontSize  = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            recentExpenses.forEach { expense ->
+                TransactionRow(
+                    expense      = expense,
+                    categoryName = categoryNames[expense.categoryId] ?: "Uncategorised",
+                    currency     = currency
+                )
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
     }
 }
 
-@Composable
-private fun BottomNavItem(
-    label: String,
-    icon: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val tint = if (selected) LimeGreen else TextSecondary
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier            = Modifier
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-    ) {
-        Box(
-            modifier         = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(if (selected) LimeGreen else NavyLight),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text       = icon,
-                color      = if (selected) NavyDark else TextSecondary,
-                fontSize   = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text     = label,
-            color    = tint,
-            fontSize = 10.sp
-        )
-    }
-}
-
-// ── Quick action button — compact horizontal layout ───────────────────────────
+// ── Quick action button ────────────────────────────────────────────────────────
 @Composable
 private fun QuickActionButton(
     label: String,
@@ -517,7 +389,6 @@ private fun TransactionRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Coloured circle with category initial
             Box(
                 modifier         = Modifier
                     .size(46.dp)

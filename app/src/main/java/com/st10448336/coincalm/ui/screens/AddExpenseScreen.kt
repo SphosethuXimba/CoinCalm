@@ -151,7 +151,15 @@ fun AddExpenseScreen(navController: NavController) {
         snackbarHost   = { SnackbarHost(snackbarHostState) },
         containerColor = NavyDark,
         topBar = {
-            CoinCalmTopBar(title = "Add Expense", onBack = { navController.popBackStack() })
+            CoinCalmTopBar(
+                title = "Add Expense",
+                onBack = {
+                    navController.navigate("Dashboard") {
+                        popUpTo(0) { inclusive = true }   // clears entire back stack
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
     ) { padding ->
 
@@ -428,7 +436,10 @@ fun AddExpenseScreen(navController: NavController) {
                             withContext(Dispatchers.Main) {
                                 isLoading = false
                                 snackbarHostState.showSnackbar("Expense saved!")
-                                navController.popBackStack()
+                                navController.navigate("Dashboard") {
+                                    popUpTo(0) { inclusive = true }   // clears entire stack
+                                    launchSingleTop = true
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e(TAG, "Failed to save expense: ${e.message}", e)
