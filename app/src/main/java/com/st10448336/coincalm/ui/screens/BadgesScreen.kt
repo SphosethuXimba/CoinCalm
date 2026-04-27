@@ -28,14 +28,40 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.compose.ui.draw.alpha
+
+/**
+ * BadgesScreen — Displays the user's XP, level, and badge achievements.
+ *
+ * REQUIREMENT-08: Gamification — Badges & XP System.
+ *
+ * XP is calculated from user activity (no extra DB columns required):
+ *  - Each expense logged  = 10 XP
+ *  - Each category created = 20 XP
+ *  - Each goal created    = 30 XP
+ *
+ * BADGE UNLOCK CONDITIONS:
+ *  - First Steps    : Log 1 expense
+ *  - 7-Day Streak   : Log expenses on 7 consecutive days
+ *  - Saver Pro      : Log 10 or more expenses
+ *  - Goal Crusher   : Create 1 savings goal
+ *  - Team Player    : Create 3 or more categories
+ *  - Budget Master  : Create 5 or more goals
+ *  - Big Spender    : Log 25 or more expenses
+ *  - Organised      : Create 5 or more categories
+ *
+ * All badge logic is computed in-memory from existing Room data —
+ * no schema changes or migrations are required.
+ *
+ * @author Zisanda Hlongwa [ST10447612] — PROG7313 POE Part 2
+ */
 
 // ── Data model for a badge ─────────────────────────────────────────────────────
 data class Badge(
     val id: String,
     val title: String,
     val description: String,
-    val emoji: String,
+    val icon: String,
+    val iconColor: Color,
     val isEarned: Boolean,
     val xpReward: Int
 )
@@ -106,68 +132,76 @@ fun BadgesScreen(navController: NavController) {
     // ── Badge definitions ──────────────────────────────────────────────────────
     val badges = listOf(
         Badge(
-            id          = "first_steps",
-            title       = "First Steps",
+            id        = "first_steps",
+            title     = "First Steps",
             description = "Log your first expense",
-            emoji       = "🥇",
-            isEarned    = totalExpenseCount >= 1,
-            xpReward    = 50
+            icon      = "1ST",
+            iconColor = Color(0xFFFFD700),
+            isEarned  = totalExpenseCount >= 1,
+            xpReward  = 50
         ),
         Badge(
-            id          = "seven_day_streak",
-            title       = "7-Day Streak",
+            id        = "seven_day_streak",
+            title     = "7-Day Streak",
             description = "Log expenses 7 days in a row",
-            emoji       = "🔥",
-            isEarned    = consecutiveDays >= 7,
-            xpReward    = 200
+            icon      = "7DS",
+            iconColor = Color(0xFFFF6B35),
+            isEarned  = consecutiveDays >= 7,
+            xpReward  = 200
         ),
         Badge(
-            id          = "saver_pro",
-            title       = "Saver Pro",
+            id        = "saver_pro",
+            title     = "Saver Pro",
             description = "Log 10 or more expenses",
-            emoji       = "💰",
-            isEarned    = totalExpenseCount >= 10,
-            xpReward    = 150
+            icon      = "PRO",
+            iconColor = Color(0xFF4CAF50),
+            isEarned  = totalExpenseCount >= 10,
+            xpReward  = 150
         ),
         Badge(
-            id          = "budget_master",
-            title       = "Budget Master",
+            id        = "budget_master",
+            title     = "Budget Master",
             description = "Create 5 or more budget goals",
-            emoji       = "🏆",
-            isEarned    = goalCount >= 5,
-            xpReward    = 300
+            icon      = "MST",
+            iconColor = Color(0xFF9C27B0),
+            isEarned  = goalCount >= 5,
+            xpReward  = 300
         ),
         Badge(
-            id          = "goal_crusher",
-            title       = "Goal Crusher",
+            id        = "goal_crusher",
+            title     = "Goal Crusher",
             description = "Create your first savings goal",
-            emoji       = "🎯",
-            isEarned    = goalCount >= 1,
-            xpReward    = 100
+            icon      = "AIM",
+            iconColor = Color(0xFF2196F3),
+            isEarned  = goalCount >= 1,
+            xpReward  = 100
         ),
         Badge(
-            id          = "team_player",
-            title       = "Team Player",
+            id        = "team_player",
+            title     = "Team Player",
             description = "Set up 3 or more categories",
-            emoji       = "👥",
-            isEarned    = categoryCount >= 3,
-            xpReward    = 100
+            icon      = "CAT",
+            iconColor = Color(0xFF00BCD4),
+            isEarned  = categoryCount >= 3,
+            xpReward  = 100
         ),
         Badge(
-            id          = "big_spender",
-            title       = "Big Spender",
+            id        = "big_spender",
+            title     = "Big Spender",
             description = "Log 25 or more expenses",
-            emoji       = "💸",
-            isEarned    = totalExpenseCount >= 25,
-            xpReward    = 250
+            icon      = "25X",
+            iconColor = Color(0xFFFF5252),
+            isEarned  = totalExpenseCount >= 25,
+            xpReward  = 250
         ),
         Badge(
-            id          = "organised",
-            title       = "Organised",
+            id        = "organised",
+            title     = "Organised",
             description = "Create 5 or more categories",
-            emoji       = "📂",
-            isEarned    = categoryCount >= 5,
-            xpReward    = 150
+            icon      = "ORG",
+            iconColor = Color(0xFF009688),
+            isEarned  = categoryCount >= 5,
+            xpReward  = 150
         )
     )
 
@@ -360,14 +394,26 @@ private fun BadgeCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            // ── Icon box (replaces emoji) ──────────────────────────────────
             Box(
-                modifier = Modifier.alpha(if (badge.isEarned) 1f else 0.35f)
+                modifier         = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (badge.isEarned) badge.iconColor
+                        else badge.iconColor.copy(alpha = 0.25f)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text     = badge.emoji,
-                    fontSize = 28.sp
+                    text       = badge.icon,
+                    color      = if (badge.isEarned) Color.White else Color.White.copy(alpha = 0.5f),
+                    fontSize   = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign  = TextAlign.Center
                 )
             }
+
             Text(
                 text       = badge.title,
                 color      = if (badge.isEarned) TextPrimary else TextSecondary,
