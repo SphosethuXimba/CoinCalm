@@ -131,7 +131,7 @@ fun SettingsScreen(navController: NavController) {
         }
 
         // ── Points card ──────────────────────────────────────────────────────
-        val points = 1500
+        val points = 35
         Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = LimeGreen),

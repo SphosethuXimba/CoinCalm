@@ -59,12 +59,14 @@ dependencies {
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Compose libraries — no version needed; BOM manages them
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
 
 
 //supabase storage setup
