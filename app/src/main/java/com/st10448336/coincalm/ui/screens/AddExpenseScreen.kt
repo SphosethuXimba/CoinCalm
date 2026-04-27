@@ -148,7 +148,7 @@ fun AddExpenseScreen(navController: NavController) {
                 title = "Add Expense",
                 onBack = {
                     navController.navigate("Dashboard") {
-                        popUpTo(0) { inclusive = true }   // clears entire back stack
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
@@ -341,7 +341,7 @@ fun AddExpenseScreen(navController: NavController) {
                     }
                 }
 
-                // ── Photo section ──────────────────────────────────────────
+                // ── Photo section (optional) ───────────────────────────────
                 Text(
                     "Receipt Photo (optional)",
                     color = TextSecondary,
@@ -373,7 +373,7 @@ fun AddExpenseScreen(navController: NavController) {
                         Spacer(Modifier.width(8.dp))
                         Text("Uploading…", color = LimeGreen)
                     } else {
-                        Text("📷  Take Photo", color = LimeGreen)
+                        Text("📷  Take Photo (optional)", color = LimeGreen)
                     }
                 }
 
@@ -382,7 +382,7 @@ fun AddExpenseScreen(navController: NavController) {
                     color = when {
                         photoStatus.startsWith("✅") -> LimeGreen
                         photoStatus.startsWith("❌") -> ErrorRed
-                        else                         -> TextSecondary
+                        else                         -> TextHint
                     },
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -426,8 +426,6 @@ fun AddExpenseScreen(navController: NavController) {
 
                                 withContext(Dispatchers.Main) {
                                     isLoading = false
-
-                                    // ── Show the in-app banner ──────────────
                                     showBanner = true
                                     delay(3000)
                                     showBanner = false
@@ -502,101 +500,6 @@ private fun ExpenseSavedBanner(visible: Boolean) {
                     color    = NavyDark
                 )
             }
-<<<<<<< Updated upstream
-
-            Text(
-                text  = photoStatus,
-                color = when {
-                    photoStatus.startsWith("✅") -> LimeGreen
-                    photoStatus.startsWith("❌") -> ErrorRed
-                    else                         -> TextSecondary
-                },
-                style = MaterialTheme.typography.labelSmall
-            )
-
-            Spacer(Modifier.height(6.dp))
-
-            // ── Save Expense Button ────────────────────────────────────────
-            Button(
-                onClick = {
-                    focusManager.clearFocus()
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid
-                    if (uid == null) {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Session error — please log in again")
-                        }
-                        return@Button
-                    }
-
-                    var valid = true
-                    if (amount.toFloatOrNull() == null) {
-                        amountError = "Enter a valid amount"; valid = false
-                    }
-                    if (date.isBlank())        { dateError        = "Date is required"; valid = false }
-                    if (startTime.isBlank())   { startTimeError   = "Required";         valid = false }
-                    if (endTime.isBlank())     { endTimeError     = "Required";         valid = false }
-                    if (description.isBlank()) { descriptionError = "Description is required"; valid = false }
-                    if (!valid) return@Button
-
-                    isLoading = true
-                    scope.launch(Dispatchers.IO) {
-                        val db = AppDatabase.getInstance(context)
-                        val newExpense = Expense(
-                            userId           = uid,
-                            categoryId       = selectedCategory?.categoryId,
-                            amount           = amount.toFloat(),
-                            date             = date,
-                            startTime        = startTime,
-                            endTime          = endTime,
-                            description      = description.trim(),
-                            supabaseImageUrl = supabaseImageUrl
-                        )
-                        try {
-                            val rowId = db.expenseDao().insertExpense(newExpense)
-                            Log.d(TAG, "Expense saved. Row ID: $rowId | supabaseUrl: $supabaseImageUrl")
-                            withContext(Dispatchers.Main) {
-                                isLoading = false
-                                snackbarHostState.showSnackbar("Expense saved!")
-                                navController.navigate("Dashboard") {
-                                    popUpTo(0) { inclusive = true }   // clears entire stack
-                                    launchSingleTop = true
-                                }
-                            }
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Failed to save expense: ${e.message}", e)
-                            withContext(Dispatchers.Main) {
-                                isLoading = false
-                                snackbarHostState.showSnackbar("Failed to save. Please try again.")
-                            }
-                        }
-                    }
-                },
-                enabled  = isSaveEnabled,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor         = LimeGreen,
-                    contentColor           = NavyDarkest,
-                    disabledContainerColor = NavyLight,
-                    disabledContentColor   = TextHint
-                ),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color       = NavyDarkest,
-                        modifier    = Modifier.size(22.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Save Expense")
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-=======
->>>>>>> Stashed changes
         }
     }
 }
