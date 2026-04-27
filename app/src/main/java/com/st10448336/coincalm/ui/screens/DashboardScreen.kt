@@ -238,7 +238,7 @@ fun DashboardScreen(navController: NavController) {
                     label    = "Badges",
                     bgColor  = Color(0xFF4A3A1B),
                     textIcon = "XP",
-                    onClick  = { },
+                    onClick  = { navController.navigate(NavRoutes.Badges.route) },
                     modifier = Modifier.weight(1f)
                 )
             }

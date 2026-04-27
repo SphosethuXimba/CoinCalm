@@ -85,6 +85,12 @@ interface ExpenseDao {
 
     @Delete
     suspend fun deleteExpense(expense: Expense)
+    @Query("""
+        SELECT * FROM expenses
+        WHERE user_id = :userId
+        ORDER BY date DESC, created_at DESC
+    """)
+    suspend fun getAllExpensesForUser(userId: String): List<Expense>
 }
 
 /**

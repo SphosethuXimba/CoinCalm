@@ -17,4 +17,5 @@ sealed class NavRoutes(val route: String) {
 
     object Camera : NavRoutes("camera")
     object Settings : NavRoutes("settings")
+    object Badges : NavRoutes("badges")
 }

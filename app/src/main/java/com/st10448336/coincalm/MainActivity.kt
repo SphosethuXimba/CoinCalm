@@ -119,6 +119,8 @@ fun CoinCalmApp() {
             composable(NavRoutes.Settings.route) {
                 SettingsScreen(navController = navController)
             }
+
+            composable(NavRoutes.Badges.route) { BadgesScreen(navController) }
         }
     }
 }
