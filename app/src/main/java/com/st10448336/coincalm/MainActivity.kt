@@ -81,7 +81,7 @@ fun CoinCalmApp() {
             composable(NavRoutes.Login.route) { LoginScreen(navController) }
             composable(NavRoutes.Register.route) { RegisterScreen(navController) }
 
-<<<<<<< Updated upstream
+
             composable(NavRoutes.Login.route) {
                 LoginScreen(navController)
             }
@@ -119,7 +119,7 @@ fun CoinCalmApp() {
             }
 
             composable(NavRoutes.Badges.route) { BadgesScreen(navController) }
-=======
+
             composable(NavRoutes.Dashboard.route) { DashboardScreen(navController) }
             composable(NavRoutes.AddCategory.route) { AddCategoryScreen(navController) }
             composable(NavRoutes.AddExpense.route) { AddExpenseScreen(navController) }
@@ -127,7 +127,7 @@ fun CoinCalmApp() {
             composable(NavRoutes.Reports.route) { ReportsHistoryScreen(navController) }
             composable(NavRoutes.Camera.route) { CameraScreen(navController) }
             composable(NavRoutes.Settings.route) { SettingsScreen(navController = navController) }
->>>>>>> Stashed changes
+
         }
     }
 }
