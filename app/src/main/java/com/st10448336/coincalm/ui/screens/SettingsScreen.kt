@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.st10448336.coincalm.data.AppDatabase
+import com.st10448336.coincalm.data.SessionPreferences
 import com.st10448336.coincalm.data.entites.User
 import com.st10448336.coincalm.navigation.NavRoutes
 import com.st10448336.coincalm.ui.theme.*
@@ -61,8 +62,27 @@ fun SettingsScreen(
         }
     }
 
+    // Show a loading spinner while fetching, but don't return early forever.
+    // If user is still null after the LaunchedEffect completes, show a
+    // recovery message instead of spinning indefinitely.
     if (currentUser == null) {
-        Text("Loading user data...")
+        Box(
+            modifier         = Modifier
+                .fillMaxSize()
+                .background(if (darkMode) NavyDarkest else Color(0xFFF0F4FF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(color = LimeGreen)
+                Text(
+                    text  = "Loading profile…",
+                    color = TextSecondary
+                )
+            }
+        }
         return
     }
 
@@ -291,7 +311,10 @@ fun SettingsScreen(
 
         Button(
             onClick = {
+                // Clear Remember Me so the next launch goes to Login
+                SessionPreferences(context).clearSession()
                 auth.signOut()
+                Log.d("SettingsScreen", "User signed out — Remember Me cleared")
                 navController.navigate(NavRoutes.Login.route) {
                     popUpTo(0) { inclusive = true }
                 }

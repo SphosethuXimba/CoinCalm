@@ -21,72 +21,72 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.st10448336.coincalm.navigation.NavRoutes
-import com.st10448336.coincalm.ui.theme.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.st10448336.coincalm.data.SessionPreferences
+import com.st10448336.coincalm.data.UserSyncHelper
+import com.st10448336.coincalm.navigation.NavRoutes
+import com.st10448336.coincalm.ui.theme.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 
 /**
- * LoginScreen — Fully functional Firebase Auth sign-in.
+ * LoginScreen — Firebase Auth sign-in with "Remember Me" support.
  *
- * BUG FIX: BlueStacks and some physical keyboards inject invisible whitespace
- * characters (non-breaking spaces, zero-width spaces) that Android's .trim()
- * does not remove. We sanitize the email in onValueChange by stripping ALL
- * Unicode whitespace using a regex, not just ASCII spaces.
+ * REMEMBER ME BEHAVIOUR:
+ *  - Checked  → SessionPreferences.rememberMe = true
+ *               On next launch, SplashScreen skips login and goes to Dashboard.
+ *  - Unchecked → SessionPreferences.rememberMe = false
+ *               On next launch, SplashScreen signs out Firebase and shows Login.
  *
- * BUG FIX: Inline email format validation now runs AS the user types, so
- * the user sees "invalid email" feedback immediately instead of tapping
- * a disabled button with no explanation.
+ * The email field is pre-filled from the last successful login
+ * so the user doesn't have to retype it even when Remember Me is off.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
 
-    val TAG           = "LoginScreen"
-    val context       = LocalContext.current
-    val scope         = rememberCoroutineScope()
-    val focusManager  = LocalFocusManager.current
-    val snackbarHost  = remember { SnackbarHostState() }
+    val TAG          = "LoginScreen"
+    val context      = LocalContext.current
+    val scope        = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val snackbarHost = remember { SnackbarHostState() }
+    val sessionPrefs = remember { SessionPreferences(context) }
 
     // ── State ──────────────────────────────────────────────────────────────
-    var email           by remember { mutableStateOf("") }
+    // Pre-fill email from last login for convenience
+    var email           by remember { mutableStateOf(sessionPrefs.getSavedEmail()) }
     var password        by remember { mutableStateOf("") }
     var emailError      by remember { mutableStateOf<String?>(null) }
     var passwordError   by remember { mutableStateOf<String?>(null) }
     var isLoading       by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    // Default to false — user must explicitly choose to stay logged in
+    var rememberMe      by remember { mutableStateOf(false) }
 
-    // ── Real-time validation for Sign In button ────────────────────────────
-    // Compute inline whether the current inputs are valid.
-    // This drives BOTH the button enabled state AND the inline error labels,
-    // so the user always knows why the button is disabled.
-    val emailIsValid   = email.isNotBlank() &&
+    // ── Real-time validation ───────────────────────────────────────────────
+    val emailIsValid    = email.isNotBlank() &&
             Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val passwordIsValid = password.isNotBlank()
     val isSignInEnabled = emailIsValid && passwordIsValid && !isLoading
 
-    // Show inline email format error as soon as the user has typed something
-    // but the format is wrong — this is the fix for "why is my button grey?"
     val inlineEmailError: String? = when {
-        email.isEmpty()    -> null           // don't nag on empty field
-        !emailIsValid      -> "Please enter a valid email address"
-        else               -> emailError     // preserve server-side errors
+        email.isEmpty() -> null
+        !emailIsValid   -> "Please enter a valid email address"
+        else            -> emailError
     }
 
     Scaffold(
         snackbarHost   = { SnackbarHost(snackbarHost) },
-        containerColor = NavyDark
+        containerColor = screenBackground()
     ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(screenBackground())
                 .padding(padding)
                 .padding(horizontal = 28.dp)
                 .verticalScroll(rememberScrollState())
@@ -96,36 +96,28 @@ fun LoginScreen(navController: NavController) {
             Text(
                 text  = "WELCOME BACK!",
                 style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
+                color = contentPrimary()
             )
             Text(
                 text     = "Sign in to CoinCalm",
                 style    = MaterialTheme.typography.bodyMedium,
-                color    = TextSecondary,
+                color    = contentSecondary(),
                 modifier = Modifier.padding(top = 6.dp)
             )
 
             Spacer(Modifier.height(48.dp))
 
-            // ── Email field ───────────────────────────────────────────────
+            // ── Email ──────────────────────────────────────────────────────
             OutlinedTextField(
                 value         = email,
                 onValueChange = { rawInput ->
-                    // KEY FIX: Strip ALL Unicode whitespace including:
-                    // - Regular spaces (U+0020)
-                    // - Non-breaking spaces (U+00A0) — injected by BlueStacks
-                    // - Zero-width spaces (U+200B) — injected by some IMEs
-                    // - Tabs, carriage returns, newlines
-                    // Using \s in Kotlin regex covers all Unicode whitespace.
-                    val sanitized = rawInput.replace(Regex("\\s"), "")
-                    email      = sanitized
-                    emailError = null   // clear server-side error on new input
+                    // Strip invisible whitespace injected by BlueStacks / some IMEs
+                    email      = rawInput.replace(Regex("\\s"), "")
+                    emailError = null
                 },
-                label         = { Text("Email Address") },
-                isError       = inlineEmailError != null,
-                supportingText = inlineEmailError?.let {
-                    { Text(it, color = ErrorRed) }
-                },
+                label          = { Text("Email Address") },
+                isError        = inlineEmailError != null,
+                supportingText = inlineEmailError?.let { { Text(it, color = ErrorRed) } },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction    = ImeAction.Next
@@ -141,18 +133,13 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Password field ────────────────────────────────────────────
+            // ── Password ───────────────────────────────────────────────────
             OutlinedTextField(
                 value         = password,
-                onValueChange = {
-                    password      = it
-                    passwordError = null
-                },
+                onValueChange = { password = it; passwordError = null },
                 label         = { Text("Password") },
                 isError       = passwordError != null,
-                supportingText = passwordError?.let {
-                    { Text(it, color = ErrorRed) }
-                },
+                supportingText = passwordError?.let { { Text(it, color = ErrorRed) } },
                 visualTransformation = if (passwordVisible)
                     VisualTransformation.None
                 else
@@ -176,8 +163,11 @@ fun LoginScreen(navController: NavController) {
                         if (isSignInEnabled) {
                             scope.launch {
                                 performLogin(
+                                    context          = context,
                                     email            = email,
                                     password         = password,
+                                    rememberMe       = rememberMe,
+                                    sessionPrefs     = sessionPrefs,
                                     setEmailError    = { emailError = it },
                                     setPasswordError = { passwordError = it },
                                     setLoading       = { isLoading = it },
@@ -198,7 +188,7 @@ fun LoginScreen(navController: NavController) {
                 modifier   = Modifier.fillMaxWidth()
             )
 
-            // Forgot password
+            // ── Forgot password ────────────────────────────────────────────
             TextButton(
                 onClick  = {
                     if (email.isNotBlank()) {
@@ -217,16 +207,53 @@ fun LoginScreen(navController: NavController) {
                 Text("Forgot Password?", color = LimeGreen)
             }
 
+            Spacer(Modifier.height(8.dp))
+
+            // ── Remember Me toggle ─────────────────────────────────────────
+            Row(
+                modifier          = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked         = rememberMe,
+                    onCheckedChange = { rememberMe = it },
+                    enabled         = !isLoading,
+                    colors          = CheckboxDefaults.colors(
+                        checkedColor   = LimeGreen,
+                        uncheckedColor = TextHint,
+                        checkmarkColor = NavyDarkest
+                    )
+                )
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text  = "Remember me on this device",
+                        color = contentPrimary(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text  = "Stay signed in when you reopen the app",
+                        color = contentSecondary(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
             Spacer(Modifier.height(20.dp))
 
-            // ── Sign In Button ────────────────────────────────────────────
+            // ── Sign In Button ─────────────────────────────────────────────
             Button(
                 onClick = {
                     focusManager.clearFocus()
                     scope.launch {
                         performLogin(
+                            context          = context,
                             email            = email,
                             password         = password,
+                            rememberMe       = rememberMe,
+                            sessionPrefs     = sessionPrefs,
                             setEmailError    = { emailError = it },
                             setPasswordError = { passwordError = it },
                             setLoading       = { isLoading = it },
@@ -246,8 +273,6 @@ fun LoginScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor         = LimeGreen,
                     contentColor           = NavyDarkest,
-                    // FIX: Make disabled state clearly visible so user
-                    // understands the button is not yet active
                     disabledContainerColor = NavyLight,
                     disabledContentColor   = TextHint
                 ),
@@ -267,10 +292,10 @@ fun LoginScreen(navController: NavController) {
                 }
             }
 
-            // Helper text explaining why button might be disabled
+            // Helper text explaining why button is disabled
             if (!isSignInEnabled && !isLoading) {
                 Text(
-                    text     = when {
+                    text = when {
                         email.isBlank() && password.isBlank() ->
                             "Enter your email and password to continue"
                         email.isBlank()   -> "Email address is required"
@@ -288,24 +313,30 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(20.dp))
 
-            // Register link
             TextButton(
                 onClick  = { navController.navigate(NavRoutes.Register.route) },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text("Don't have an account? ", color = TextSecondary)
+                Text("Don't have an account? ", color = contentSecondary())
                 Text("Register", color = LimeGreen)
             }
+
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
 /**
- * Extracted login logic — runs on IO dispatcher, updates UI via callbacks.
+ * Extracted login logic.
+ * Saves the Remember Me flag and email BEFORE navigating,
+ * so if the app is killed mid-navigation the preference is already stored.
  */
 private suspend fun performLogin(
+    context: android.content.Context,
     email: String,
     password: String,
+    rememberMe: Boolean,
+    sessionPrefs: SessionPreferences,
     setEmailError: (String?) -> Unit,
     setPasswordError: (String?) -> Unit,
     setLoading: (Boolean) -> Unit,
@@ -314,24 +345,21 @@ private suspend fun performLogin(
 ) {
     val TAG = "LoginScreen"
 
-    // Final sanitization before Firebase call
+    // Final sanitize
     val cleanEmail = email.trim().replace(Regex("\\s"), "").lowercase()
 
     if (cleanEmail.isBlank()) {
-        setEmailError("Email address is required")
-        return
+        setEmailError("Email address is required"); return
     }
     if (!Patterns.EMAIL_ADDRESS.matcher(cleanEmail).matches()) {
-        setEmailError("Please enter a valid email address")
-        return
+        setEmailError("Please enter a valid email address"); return
     }
     if (password.isBlank()) {
-        setPasswordError("Password is required")
-        return
+        setPasswordError("Password is required"); return
     }
 
     setLoading(true)
-    Log.d(TAG, "Calling Firebase signInWithEmailAndPassword for: $cleanEmail")
+    Log.d(TAG, "Firebase signInWithEmailAndPassword: $cleanEmail | rememberMe=$rememberMe")
 
     try {
         val result = FirebaseAuth.getInstance()
@@ -339,16 +367,25 @@ private suspend fun performLogin(
             .await()
 
         Log.i(TAG, "Login success. UID: ${result.user?.uid}")
+
+        // Save Remember Me preference and email BEFORE navigating
+        sessionPrefs.setRememberMe(rememberMe)
+        sessionPrefs.saveEmail(cleanEmail)
+        Log.d(TAG, "Session preference saved: rememberMe=$rememberMe")
+
+        // Ensure RoomDB has a user row (handles new device / cloned repo)
+        UserSyncHelper.ensureUserInRoomDb(context)
+
         setLoading(false)
         onSuccess()
 
     } catch (e: FirebaseAuthInvalidUserException) {
-        Log.w(TAG, "No account found: $cleanEmail")
+        Log.w(TAG, "No account: $cleanEmail")
         setLoading(false)
         setEmailError("No account found with this email address")
 
     } catch (e: FirebaseAuthInvalidCredentialsException) {
-        Log.w(TAG, "Wrong password for: $cleanEmail")
+        Log.w(TAG, "Wrong password: $cleanEmail")
         setLoading(false)
         setPasswordError("Incorrect email or password")
 

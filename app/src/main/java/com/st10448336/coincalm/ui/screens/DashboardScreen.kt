@@ -122,7 +122,11 @@ fun DashboardScreen(navController: NavController) {
                     fontSize = 13.sp
                 )
                 Text(
-                    text       = currentUser?.username ?: "...",
+                    text = when {
+                        currentUser?.username?.isNotBlank() == true -> currentUser!!.username
+                        currentUser != null -> currentUser!!.email.substringBefore("@")
+                        else -> "Loading…"
+                    },
                     color      = contentPrimary(),
                     fontSize   = 22.sp,
                     fontWeight = FontWeight.Bold

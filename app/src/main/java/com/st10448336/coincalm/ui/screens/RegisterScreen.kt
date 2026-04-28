@@ -27,6 +27,7 @@ import com.st10448336.coincalm.ui.theme.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.st10448336.coincalm.data.SessionPreferences
 import com.st10448336.coincalm.data.entites.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -346,6 +347,39 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(Modifier.height(28.dp))
 
+            var rememberMe by remember { mutableStateOf(true) } // default true for new registrations
+
+            Row(
+                modifier          = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked         = rememberMe,
+                    onCheckedChange = { rememberMe = it },
+                    enabled         = !isLoading,
+                    colors          = CheckboxDefaults.colors(
+                        checkedColor   = LimeGreen,
+                        uncheckedColor = TextHint,
+                        checkmarkColor = NavyDarkest
+                    )
+                )
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text  = "Remember me on this device",
+                        color = TextPrimary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text  = "Stay signed in when you reopen the app",
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
             // ── Create Account Button ──────────────────────────────────────
             Button(
                 onClick = {
@@ -363,7 +397,8 @@ fun RegisterScreen(navController: NavController) {
                             password      = password,
                             monthlyIncome = income,
                             currency      = selectedCurrency,
-                            setLoading    = { isLoading = it },
+                            rememberMe = rememberMe,
+                                    setLoading    = { isLoading = it },
                             onSuccess     = {
                                 navController.navigate(NavRoutes.Dashboard.route) {
                                     popUpTo(NavRoutes.Register.route) { inclusive = true }
@@ -399,8 +434,6 @@ fun RegisterScreen(navController: NavController) {
                 }
             }
 
-            // ── Helper text explaining why button is disabled ──────────────
-            // This is the key UX fix — user always knows what to do next
             if (!isButtonEnabled && !isLoading && buttonHint.isNotBlank()) {
                 Text(
                     text     = "⚠ $buttonHint",
@@ -435,6 +468,7 @@ private suspend fun performRegistration(
     password: String,
     monthlyIncome: Float,
     currency: String,
+    rememberMe: Boolean,          // ADD
     setLoading: (Boolean) -> Unit,
     onSuccess: () -> Unit,
     showSnackbar: suspend (String) -> Unit
@@ -466,6 +500,13 @@ private suspend fun performRegistration(
                 )
             )
             Log.d(TAG, "User saved to RoomDB. UUID: $uid")
+
+            // Save session preference — registration implies the user
+            // wants to stay on this device since it's their first time
+            val sessionPrefs = SessionPreferences(context)
+            sessionPrefs.setRememberMe(rememberMe)
+            sessionPrefs.saveEmail(email)
+            Log.d(TAG, "Session saved after registration: rememberMe=$rememberMe")
         }
 
         setLoading(false)
