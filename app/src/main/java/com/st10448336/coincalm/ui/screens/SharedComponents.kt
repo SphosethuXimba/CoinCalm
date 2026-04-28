@@ -5,18 +5,16 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import com.st10448336.coincalm.ui.theme.LimeGreen
-import com.st10448336.coincalm.ui.theme.NavyDarkest
-import com.st10448336.coincalm.ui.theme.TextPrimary
+// 1. Swap the import from TextPrimary to contentPrimary
+import com.st10448336.coincalm.ui.theme.contentPrimary
+import com.st10448336.coincalm.ui.theme.screenBackground
 
-/**
- * CoinCalmTopBar — reusable top app bar used by all child screens.
- * Displays the screen title and a back arrow that calls [onBack].
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoinCalmTopBar(title: String, onBack: () -> Unit) {
     TopAppBar(
-        title = { Text(title, color = TextPrimary) },
+        // 2. Call your dynamic function here instead of the static color
+        title = { Text(title, color = contentPrimary()) },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
@@ -27,7 +25,7 @@ fun CoinCalmTopBar(title: String, onBack: () -> Unit) {
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = NavyDarkest
+            containerColor = screenBackground()
         )
     )
 }

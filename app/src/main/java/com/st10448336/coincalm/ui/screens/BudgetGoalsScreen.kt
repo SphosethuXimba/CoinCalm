@@ -25,27 +25,19 @@ import com.st10448336.coincalm.ui.theme.NavyLight
 import com.st10448336.coincalm.ui.theme.TextHint
 import com.st10448336.coincalm.ui.theme.TextSecondary
 import com.st10448336.coincalm.ui.theme.coinCalmTextFieldColors
+import com.st10448336.coincalm.ui.theme.contentSecondary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.st10448336.coincalm.ui.theme.screenBackground
 
 /**
  * BudgetGoalsScreen — Set monthly min/max spending band.
  *
  * REQUIREMENT-04: Min/Max Budget Goal Configuration.
- *
- * VALIDATION RULES (implemented with Compose State — no DB call if invalid):
- *  1. Both fields must be non-empty
- *  2. Both must be valid positive numbers
- *  3. maxGoal MUST be strictly greater than minGoal
- *
- * The Save button is disabled in real-time via [isSaveEnabled] as the user types —
- * this is Ben Shneiderman's "error prevention" principle implemented in Compose.
- *
- * @author Sphosethu Ximba [ST10448336] — PROG7313 POE Part 2
  */
 @Composable
 fun BudgetGoalsScreen(navController: NavController) {
@@ -99,7 +91,7 @@ fun BudgetGoalsScreen(navController: NavController) {
 
     val isSaveEnabled = bothFieldsValid && maxGreaterThanMin && !isLoading
 
-    // Show the constraint error inline as the user types (don't wait for submission)
+    // Show the constraint error inline as the user types
     val maxConstraintError: String? = when {
         maxGoalStr.isBlank() || minGoalStr.isBlank() -> null
         !bothFieldsValid -> null
@@ -109,7 +101,7 @@ fun BudgetGoalsScreen(navController: NavController) {
 
     Scaffold(
         snackbarHost   = { SnackbarHost(snackbarHostState) },
-        containerColor = NavyDark,
+        containerColor = screenBackground(),
         topBar = {
             CoinCalmTopBar(title = "Budget Goals", onBack = { navController.popBackStack() })
         }
@@ -118,7 +110,7 @@ fun BudgetGoalsScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(screenBackground())
                 .padding(padding)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -127,7 +119,7 @@ fun BudgetGoalsScreen(navController: NavController) {
             Text(
                 text  = "Set your monthly spending band. Max must be greater than min.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = contentSecondary()
             )
 
             // Current goal status label
@@ -166,7 +158,6 @@ fun BudgetGoalsScreen(navController: NavController) {
                         "Enter a valid amount" else null
                 },
                 label         = { Text("Maximum Goal Amount") },
-                // Show max constraint error OR the type-format error — whichever applies
                 isError       = maxError != null || maxConstraintError != null,
                 supportingText = (maxConstraintError ?: maxError)?.let { { Text(it, color = ErrorRed) } },
                 keyboardOptions = KeyboardOptions(
@@ -193,9 +184,6 @@ fun BudgetGoalsScreen(navController: NavController) {
                     isLoading = true
                     scope.launch(Dispatchers.IO) {
                         Log.d(TAG, "Saving goal for $currentMonth: min=$minFloat, max=$maxFloat")
-
-                        // TODO (Team): Add per-category goal limits here when CategoryGoal entity is added
-                        // Log.d(TAG, "TODO (Team): Insert per-category limits here before DB write")
 
                         val db = AppDatabase.getInstance(context)
                         val newGoal = Goal(

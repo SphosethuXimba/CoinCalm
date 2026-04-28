@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,29 +29,17 @@ import com.st10448336.coincalm.ui.theme.NavyMedium
 import com.st10448336.coincalm.ui.theme.TextPrimary
 import com.st10448336.coincalm.ui.theme.TextSecondary
 import com.st10448336.coincalm.ui.theme.coinCalmTextFieldColors
+import com.st10448336.coincalm.ui.theme.contentPrimary
+import com.st10448336.coincalm.ui.theme.contentSecondary
+import com.st10448336.coincalm.ui.theme.LocalDarkMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import com.st10448336.coincalm.ui.theme.screenBackground
 
 /**
  * ReportsHistoryScreen — REQUIREMENT-05: Period-based filtering and spending history.
- *
- * SKELETON: Date pickers are functional. RecyclerView (LazyColumn) placeholders
- * show exactly where to wire in DB queries and Coil image loading.
- *
- * TODO (Team): Wire up LazyColumn for category totals with ExpenseDao.getCategoryTotalsForPeriod
- * TODO (Team): Wire up LazyColumn for expense list with ExpenseDao.getExpensesForPeriod
- * TODO (Team): In expense list items, load receipt images with Coil:
- *   AsyncImage(
- *       model             = expense.supabaseImageUrl,
- *       contentDescription = "Receipt",
- *       placeholder       = painterResource(R.drawable.ic_receipt_placeholder),
- *       error             = painterResource(R.drawable.ic_receipt_error),
- *       modifier          = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp))
- *   )
- *
- * @author Sphosethu Ximba [ST10448336] — PROG7313 POE Part 2
  */
 @Composable
 fun ReportsHistoryScreen(navController: NavController) {
@@ -59,16 +48,17 @@ fun ReportsHistoryScreen(navController: NavController) {
     val context = LocalContext.current
     val scope   = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val isDark  = LocalDarkMode.current
 
     // ── Compose State ──────────────────────────────────────────────────────
-    var startDate     by remember { mutableStateOf("") }
-    var endDate       by remember { mutableStateOf("") }
+    var startDate      by remember { mutableStateOf("") }
+    var endDate        by remember { mutableStateOf("") }
     var startDateError by remember { mutableStateOf<String?>(null) }
-    var isLoading     by remember { mutableStateOf(false) }
-    var expenses      by remember { mutableStateOf<List<Expense>>(emptyList()) }
+    var isLoading      by remember { mutableStateOf(false) }
+    var expenses       by remember { mutableStateOf<List<Expense>>(emptyList()) }
     var categoryTotals by remember { mutableStateOf<List<CategoryTotal>>(emptyList()) }
-    var grandTotal    by remember { mutableStateOf(0f) }
-    var periodSummary by remember { mutableStateOf("Select a date range and tap Apply") }
+    var grandTotal     by remember { mutableStateOf(0f) }
+    var periodSummary  by remember { mutableStateOf("Select a date range and tap Apply") }
 
     // Pre-fill with first day of current month → today
     LaunchedEffect(Unit) {
@@ -88,7 +78,7 @@ fun ReportsHistoryScreen(navController: NavController) {
 
     Scaffold(
         snackbarHost   = { SnackbarHost(snackbarHostState) },
-        containerColor = NavyDark,
+        containerColor = screenBackground(),
         topBar = {
             CoinCalmTopBar(title = "Reports & History", onBack = { navController.popBackStack() })
         }
@@ -98,7 +88,7 @@ fun ReportsHistoryScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(screenBackground())
                 .padding(padding)
                 .padding(horizontal = 24.dp)
         ) {
@@ -107,7 +97,7 @@ fun ReportsHistoryScreen(navController: NavController) {
             // ── Date range pickers ─────────────────────────────────────────
             Text(
                 text  = "SELECT DATE RANGE",
-                color = TextSecondary,
+                color = contentSecondary(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.1.sp
@@ -192,15 +182,12 @@ fun ReportsHistoryScreen(navController: NavController) {
                     Log.d(TAG, "Loading reports for UID: $uid | $startDate → $endDate")
 
                     scope.launch(Dispatchers.IO) {
-                        // ── TODO (Team): Load expense list ────────────────────────────
-                        // Uncomment when Expense records are being inserted:
-                        Log.d(TAG, "TODO (Team): Query ExpenseDao.getExpensesForPeriod($uid, $startDate, $endDate)")
+                        Log.d(TAG, "Query ExpenseDao.getExpensesForPeriod($uid, $startDate, $endDate)")
                         val expenseList = AppDatabase.getInstance(context)
                             .expenseDao()
                             .getExpensesForPeriod(uid, startDate, endDate)
 
-                        // ── TODO (Team): Load category totals ─────────────────────────
-                        Log.d(TAG, "TODO (Team): Query ExpenseDao.getCategoryTotalsForPeriod($uid, $startDate, $endDate)")
+                        Log.d(TAG, "Query ExpenseDao.getCategoryTotalsForPeriod($uid, $startDate, $endDate)")
                         val totals = AppDatabase.getInstance(context)
                             .expenseDao()
                             .getCategoryTotalsForPeriod(uid, startDate, endDate)
@@ -252,7 +239,7 @@ fun ReportsHistoryScreen(navController: NavController) {
                 item {
                     Text(
                         text  = "TOTAL SPENT PER CATEGORY",
-                        color = TextSecondary,
+                        color = contentSecondary(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.1.sp
@@ -262,13 +249,11 @@ fun ReportsHistoryScreen(navController: NavController) {
 
                 if (categoryTotals.isEmpty()) {
                     item {
-                        // TODO (Team): Replace with real data from CategoryTotalAdapter
-                        PlaceholderCard("Category totals will appear here after applying filter")
+                        PlaceholderCard("Category totals will appear here after applying filter", isDark)
                     }
                 } else {
-                    // TODO (Team): Enhance with category name lookup from CategoryDao.getCategoryById
                     items(categoryTotals) { total ->
-                        CategoryTotalRow(total = total)
+                        CategoryTotalRow(total = total, isDark = isDark)
                     }
                 }
 
@@ -278,7 +263,7 @@ fun ReportsHistoryScreen(navController: NavController) {
                 item {
                     Text(
                         text  = "ALL EXPENSE ENTRIES",
-                        color = TextSecondary,
+                        color = contentSecondary(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.1.sp
@@ -288,12 +273,11 @@ fun ReportsHistoryScreen(navController: NavController) {
 
                 if (expenses.isEmpty()) {
                     item {
-                        // TODO (Team): Replace with real data rows in ExpenseAdapter
-                        PlaceholderCard("No expenses found for this period")
+                        PlaceholderCard("No expenses found for this period", isDark)
                     }
                 } else {
                     items(expenses) { expense ->
-                        ExpenseRow(expense = expense)
+                        ExpenseRow(expense = expense, isDark = isDark)
                     }
                 }
 
@@ -305,13 +289,13 @@ fun ReportsHistoryScreen(navController: NavController) {
 
 /** Placeholder card shown when a list has no data yet. */
 @Composable
-private fun PlaceholderCard(text: String) {
+private fun PlaceholderCard(text: String, isDark: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
         shape  = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = NavyMedium)
+        colors = CardDefaults.cardColors(containerColor = if (isDark) NavyMedium else Color.White)
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -319,20 +303,20 @@ private fun PlaceholderCard(text: String) {
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text(text, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            Text(text, color = contentSecondary(), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
 
 /** Displays a single category total row in the reports list. */
 @Composable
-private fun CategoryTotalRow(total: CategoryTotal) {
+private fun CategoryTotalRow(total: CategoryTotal, isDark: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 6.dp),
         shape  = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = NavyMedium)
+        colors = CardDefaults.cardColors(containerColor = if (isDark) NavyMedium else Color.White)
     ) {
         Row(
             modifier              = Modifier
@@ -341,10 +325,9 @@ private fun CategoryTotalRow(total: CategoryTotal) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically
         ) {
-            // TODO (Team): Replace "Category #ID" with actual name from CategoryDao.getCategoryById
             Text(
                 text  = "Category #${total.category_id ?: "Uncategorised"}",
-                color = TextPrimary,
+                color = contentPrimary(),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
@@ -358,26 +341,15 @@ private fun CategoryTotalRow(total: CategoryTotal) {
 
 /**
  * Displays a single expense row with optional receipt thumbnail.
- *
- * TODO (Team): Add Coil AsyncImage to display receipt photo:
- *   if (!expense.supabaseImageUrl.isNullOrEmpty()) {
- *       AsyncImage(
- *           model              = expense.supabaseImageUrl,
- *           contentDescription = "Receipt",
- *           placeholder        = painterResource(R.drawable.ic_receipt_placeholder),
- *           error              = painterResource(R.drawable.ic_receipt_error),
- *           modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp))
- *       )
- *   }
  */
 @Composable
-private fun ExpenseRow(expense: Expense) {
+private fun ExpenseRow(expense: Expense, isDark: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 6.dp),
         shape  = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = NavyMedium)
+        colors = CardDefaults.cardColors(containerColor = if (isDark) NavyMedium else Color.White)
     ) {
         Row(
             modifier          = Modifier
@@ -387,10 +359,10 @@ private fun ExpenseRow(expense: Expense) {
         ) {
             // TODO (Team): Insert Coil AsyncImage here for expense.supabaseImageUrl
             Column(modifier = Modifier.weight(1f)) {
-                Text(expense.description, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                Text(expense.description, color = contentPrimary(), fontWeight = FontWeight.SemiBold)
                 Text(
                     text  = "${expense.date}  ${expense.startTime}–${expense.endTime}",
-                    color = TextSecondary,
+                    color = contentSecondary(),
                     style = MaterialTheme.typography.labelSmall
                 )
                 if (!expense.supabaseImageUrl.isNullOrEmpty()) {

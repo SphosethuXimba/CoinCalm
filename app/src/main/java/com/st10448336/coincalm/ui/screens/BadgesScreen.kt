@@ -29,32 +29,6 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * BadgesScreen — Displays the user's XP, level, and badge achievements.
- *
- * REQUIREMENT-08: Gamification — Badges & XP System.
- *
- * XP is calculated from user activity (no extra DB columns required):
- *  - Each expense logged  = 10 XP
- *  - Each category created = 20 XP
- *  - Each goal created    = 30 XP
- *
- * BADGE UNLOCK CONDITIONS:
- *  - First Steps    : Log 1 expense
- *  - 7-Day Streak   : Log expenses on 7 consecutive days
- *  - Saver Pro      : Log 10 or more expenses
- *  - Goal Crusher   : Create 1 savings goal
- *  - Team Player    : Create 3 or more categories
- *  - Budget Master  : Create 5 or more goals
- *  - Big Spender    : Log 25 or more expenses
- *  - Organised      : Create 5 or more categories
- *
- * All badge logic is computed in-memory from existing Room data —
- * no schema changes or migrations are required.
- *
- * @author Zisanda Hlongwa [ST10447612] — PROG7313 POE Part 2
- */
-
 // ── Data model for a badge ─────────────────────────────────────────────────────
 data class Badge(
     val id: String,
@@ -77,6 +51,9 @@ fun BadgesScreen(navController: NavController) {
     var goalCount         by remember { mutableIntStateOf(0) }
     var consecutiveDays   by remember { mutableIntStateOf(0) }
     var totalXpEarned     by remember { mutableIntStateOf(0) }
+
+    // Use LocalDarkMode exactly like SettingsScreen
+    val isDark = LocalDarkMode.current
 
     // ── Load stats from Room ───────────────────────────────────────────────────
     LaunchedEffect(Unit) {
@@ -212,7 +189,7 @@ fun BadgesScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(NavyDark)
+            .background(screenBackground())
             .verticalScroll(rememberScrollState())
     ) {
 
@@ -227,12 +204,12 @@ fun BadgesScreen(navController: NavController) {
                 Icon(
                     imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint               = TextPrimary
+                    tint               = contentPrimary()
                 )
             }
             Text(
                 text       = "My Achievements",
-                color      = TextPrimary,
+                color      = contentPrimary(),
                 fontSize   = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -244,7 +221,7 @@ fun BadgesScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             shape  = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = NavyMedium)
+            colors = CardDefaults.cardColors(containerColor = if (isDark) NavyMedium else Color.White)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
 
@@ -276,7 +253,7 @@ fun BadgesScreen(navController: NavController) {
                         )
                         Text(
                             text     = "$xpIntoLevel / $xpPerLevel XP to next level",
-                            color    = TextSecondary,
+                            color    = contentSecondary(),
                             fontSize = 12.sp
                         )
                     }
@@ -297,7 +274,7 @@ fun BadgesScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(10.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(NavyLight)
+                        .background(if (isDark) NavyLight else Color(0xFFF0F4FF))
                 ) {
                     Box(
                         modifier = Modifier
@@ -316,7 +293,7 @@ fun BadgesScreen(navController: NavController) {
         if (earnedBadges.isNotEmpty()) {
             Text(
                 text          = "EARNED BADGES",
-                color         = TextSecondary,
+                color         = contentSecondary(),
                 fontSize      = 11.sp,
                 fontWeight    = FontWeight.Bold,
                 letterSpacing = 0.1.sp,
@@ -346,7 +323,7 @@ fun BadgesScreen(navController: NavController) {
         if (lockedBadges.isNotEmpty()) {
             Text(
                 text          = "LOCKED BADGES",
-                color         = TextSecondary,
+                color         = contentSecondary(),
                 fontSize      = 11.sp,
                 fontWeight    = FontWeight.Bold,
                 letterSpacing = 0.1.sp,
@@ -380,11 +357,16 @@ private fun BadgeCard(
     badge: Badge,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalDarkMode.current
     Card(
         modifier = modifier,
         shape    = RoundedCornerShape(14.dp),
         colors   = CardDefaults.cardColors(
-            containerColor = if (badge.isEarned) NavyMedium else NavyLight.copy(alpha = 0.4f)
+            containerColor = if (badge.isEarned) {
+                if (isDark) NavyMedium else Color.White
+            } else {
+                if (isDark) NavyLight.copy(alpha = 0.4f) else Color(0xFFE5E9F2)
+            }
         )
     ) {
         Column(
@@ -416,7 +398,7 @@ private fun BadgeCard(
 
             Text(
                 text       = badge.title,
-                color      = if (badge.isEarned) TextPrimary else TextSecondary,
+                color      = if (badge.isEarned) contentPrimary() else contentSecondary(),
                 fontSize   = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 textAlign  = TextAlign.Center,

@@ -1,6 +1,7 @@
 package com.st10448336.coincalm.ui.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,14 +32,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(
+    navController: NavController,
+    darkMode: Boolean,
+    onDarkModeToggle: (Boolean) -> Unit
+) {
 
-    val TAG = "SettingsScreen"
+    val TAG     = "SettingsScreen"
     val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
+    val auth    = FirebaseAuth.getInstance()
 
     var currentUser by remember { mutableStateOf<User?>(null) }
-    var darkMode by remember { mutableStateOf(true) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val uid = auth.currentUser?.uid
@@ -66,6 +71,42 @@ fun SettingsScreen(navController: NavController) {
     val textPri  = if (darkMode) TextPrimary  else Color(0xFF0A1628)
     val textSec  = if (darkMode) TextSecondary else Color(0xFF607D8B)
 
+    // ── Password reset dialog ──────────────────────────────────────────────────
+    if (showPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showPasswordDialog = false },
+            containerColor   = NavyMedium,
+            title = {
+                Text(
+                    text       = "Reset Password",
+                    color      = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text     = "A password reset link will be sent to:\n${currentUser?.email}",
+                    color    = TextSecondary,
+                    fontSize = 14.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPasswordDialog = false
+                    auth.sendPasswordResetEmail(currentUser?.email ?: "")
+                    Toast.makeText(context, "Reset email sent!", Toast.LENGTH_SHORT).show()
+                }) {
+                    Text("Send", color = LimeGreen, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPasswordDialog = false }) {
+                    Text("Cancel", color = TextSecondary)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,28 +118,28 @@ fun SettingsScreen(navController: NavController) {
 
         // ── Header ──────────────────────────────────────────────────────────
         Text(
-            text = "Settings",
-            fontSize = 28.sp,
+            text       = "Settings",
+            fontSize   = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = textPri
+            color      = textPri
         )
 
         // ── Profile card ─────────────────────────────────────────────────────
         Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBg),
+            shape     = RoundedCornerShape(20.dp),
+            colors    = CardDefaults.cardColors(containerColor = cardBg),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier  = Modifier.fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier
+                modifier              = Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(
-                    modifier = Modifier
+                    modifier         = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
                         .background(
@@ -107,24 +148,24 @@ fun SettingsScreen(navController: NavController) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = currentUser?.username?.take(2)?.uppercase() ?: "NN",
-                        fontSize = 22.sp,
+                        text       = currentUser?.username?.take(2)?.uppercase() ?: "NN",
+                        fontSize   = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = NavyDarkest
+                        color      = NavyDarkest
                     )
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = currentUser?.username ?: "Loading...",
-                        fontSize = 18.sp,
+                        text       = currentUser?.username ?: "Loading...",
+                        fontSize   = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = textPri
+                        color      = textPri
                     )
                     Text(
-                        text = currentUser?.email ?: "Loading...",
+                        text     = currentUser?.email ?: "Loading...",
                         fontSize = 13.sp,
-                        color = textSec
+                        color    = textSec
                     )
                 }
             }
@@ -133,36 +174,36 @@ fun SettingsScreen(navController: NavController) {
         // ── Points card ──────────────────────────────────────────────────────
         val points = 1500
         Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = LimeGreen),
+            shape    = RoundedCornerShape(20.dp),
+            colors   = CardDefaults.cardColors(containerColor = LimeGreen),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier
+                modifier              = Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(
-                        text = "Your Points",
-                        fontSize = 13.sp,
+                        text       = "Your Points",
+                        fontSize   = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = NavyDark
+                        color      = NavyDark
                     )
                     Text(
-                        text = "$points pts",
-                        fontSize = 32.sp,
+                        text       = "$points pts",
+                        fontSize   = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = NavyDarkest
+                        color      = NavyDarkest
                     )
                 }
                 Icon(
-                    imageVector = Icons.Filled.Star,
+                    imageVector        = Icons.Filled.Star,
                     contentDescription = null,
-                    tint = NavyDark,
-                    modifier = Modifier.size(48.dp)
+                    tint               = NavyDark,
+                    modifier           = Modifier.size(48.dp)
                 )
             }
         }
@@ -171,39 +212,39 @@ fun SettingsScreen(navController: NavController) {
         SettingsSectionHeader(title = "Appearance", textColor = textSec)
 
         Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBg),
+            shape    = RoundedCornerShape(16.dp),
+            colors   = CardDefaults.cardColors(containerColor = cardBg),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
-                modifier = Modifier
+                modifier              = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Icon(
-                        imageVector = if (darkMode) Icons.Filled.DarkMode else Icons.Filled.LightMode,
+                        imageVector        = if (darkMode) Icons.Filled.DarkMode else Icons.Filled.LightMode,
                         contentDescription = null,
-                        tint = LimeGreen,
-                        modifier = Modifier.size(22.dp)
+                        tint               = LimeGreen,
+                        modifier           = Modifier.size(22.dp)
                     )
                     Text(
-                        text = if (darkMode) "Dark Mode" else "Light Mode",
+                        text     = if (darkMode) "Dark Mode" else "Light Mode",
                         fontSize = 15.sp,
-                        color = textPri
+                        color    = textPri
                     )
                 }
                 Switch(
-                    checked = darkMode,
-                    onCheckedChange = { darkMode = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = NavyDarkest,
-                        checkedTrackColor = LimeGreen,
+                    checked         = darkMode,
+                    onCheckedChange = { onDarkModeToggle(it) },
+                    colors          = SwitchDefaults.colors(
+                        checkedThumbColor   = NavyDarkest,
+                        checkedTrackColor   = LimeGreen,
                         uncheckedThumbColor = NavyDarkest,
                         uncheckedTrackColor = TextHint
                     )
@@ -215,30 +256,32 @@ fun SettingsScreen(navController: NavController) {
         SettingsSectionHeader(title = "Account", textColor = textSec)
 
         Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBg),
+            shape    = RoundedCornerShape(16.dp),
+            colors   = CardDefaults.cardColors(containerColor = cardBg),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column {
                 SettingsRowItem(
-                    icon = Icons.Filled.Person,
-                    label = "Edit Profile",
+                    icon      = Icons.Filled.Person,
+                    label     = "Edit Profile",
                     textColor = textPri,
-                    onClick = { /* TODO */ }
+                    onClick   = { navController.navigate(NavRoutes.EditProfile.route) }
                 )
                 HorizontalDivider(color = InputBackground, thickness = 1.dp)
                 SettingsRowItem(
-                    icon = Icons.Filled.Lock,
-                    label = "Change Password",
+                    icon      = Icons.Filled.Lock,
+                    label     = "Change Password",
                     textColor = textPri,
-                    onClick = { /* TODO */ }
+                    onClick   = { showPasswordDialog = true }
                 )
                 HorizontalDivider(color = InputBackground, thickness = 1.dp)
                 SettingsRowItem(
-                    icon = Icons.Filled.Notifications,
-                    label = "Notifications",
+                    icon      = Icons.Filled.Notifications,
+                    label     = "Notifications",
                     textColor = textPri,
-                    onClick = { /* TODO */ }
+                    onClick   = {
+                        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                    }
                 )
             }
         }
@@ -248,6 +291,7 @@ fun SettingsScreen(navController: NavController) {
 
         Button(
             onClick = {
+                auth.signOut()
                 navController.navigate(NavRoutes.Login.route) {
                     popUpTo(0) { inclusive = true }
                 }
@@ -255,21 +299,21 @@ fun SettingsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            shape = RoundedCornerShape(14.dp),
+            shape  = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ErrorRed,
-                contentColor = TextPrimary
+                contentColor   = TextPrimary
             )
         ) {
             Icon(
-                imageVector = Icons.Filled.Logout,
+                imageVector        = Icons.Filled.Logout,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier           = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Log Out",
-                fontSize = 16.sp,
+                text       = "Log Out",
+                fontSize   = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -279,12 +323,12 @@ fun SettingsScreen(navController: NavController) {
 @Composable
 private fun SettingsSectionHeader(title: String, textColor: Color) {
     Text(
-        text = title.uppercase(),
-        fontSize = 11.sp,
-        fontWeight = FontWeight.Bold,
+        text          = title.uppercase(),
+        fontSize      = 11.sp,
+        fontWeight    = FontWeight.Bold,
         letterSpacing = 1.5.sp,
-        color = textColor,
-        modifier = Modifier.padding(horizontal = 4.dp)
+        color         = textColor,
+        modifier      = Modifier.padding(horizontal = 4.dp)
     )
 }
 
@@ -296,36 +340,36 @@ private fun SettingsRowItem(
     onClick: () -> Unit
 ) {
     TextButton(
-        onClick = onClick,
+        onClick  = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp),
         shape = RoundedCornerShape(0.dp)
     ) {
         Row(
-            modifier = Modifier
+            modifier              = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Icon(
-                imageVector = icon,
+                imageVector        = icon,
                 contentDescription = null,
-                tint = LimeGreen,
-                modifier = Modifier.size(20.dp)
+                tint               = LimeGreen,
+                modifier           = Modifier.size(20.dp)
             )
             Text(
-                text = label,
+                text     = label,
                 fontSize = 15.sp,
-                color = textColor,
+                color    = textColor,
                 modifier = Modifier.weight(1f)
             )
             Icon(
-                imageVector = Icons.Filled.ChevronRight,
+                imageVector        = Icons.Filled.ChevronRight,
                 contentDescription = null,
-                tint = textColor.copy(alpha = 0.4f),
-                modifier = Modifier.size(18.dp)
+                tint               = textColor.copy(alpha = 0.4f),
+                modifier           = Modifier.size(18.dp)
             )
         }
     }

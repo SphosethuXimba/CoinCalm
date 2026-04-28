@@ -31,11 +31,15 @@ import com.st10448336.coincalm.ui.theme.NavyLight
 import com.st10448336.coincalm.ui.theme.NavyMedium
 import com.st10448336.coincalm.ui.theme.TextPrimary
 import com.st10448336.coincalm.ui.theme.TextSecondary
+import com.st10448336.coincalm.ui.theme.contentPrimary
+import com.st10448336.coincalm.ui.theme.contentSecondary
+import com.st10448336.coincalm.ui.theme.LocalDarkMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import com.st10448336.coincalm.ui.theme.screenBackground
 
 @Composable
 fun DashboardScreen(navController: NavController) {
@@ -43,6 +47,7 @@ fun DashboardScreen(navController: NavController) {
     val tag     = "DashboardScreen"
     val context = LocalContext.current
     val auth    = FirebaseAuth.getInstance()
+    val isDark  = LocalDarkMode.current
 
     var currentUser    by remember { mutableStateOf<User?>(null) }
     var totalSpent     by remember { mutableStateOf(0f) }
@@ -98,7 +103,7 @@ fun DashboardScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(NavyDark)
+            .background(screenBackground())
             .verticalScroll(rememberScrollState())
     ) {
 
@@ -112,13 +117,13 @@ fun DashboardScreen(navController: NavController) {
         ) {
             Column {
                 Text(
-                    text     = "Good Morning,",
-                    color    = TextSecondary,
+                    text     = "GREETINGS,",
+                    color    = contentSecondary(),
                     fontSize = 13.sp
                 )
                 Text(
                     text       = currentUser?.username ?: "...",
-                    color      = TextPrimary,
+                    color      = contentPrimary(),
                     fontSize   = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -145,14 +150,14 @@ fun DashboardScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             shape  = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = NavyMedium)
+            colors = CardDefaults.cardColors(containerColor = if (isDark) NavyMedium else Color.White)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text(text = "Total Balance:", color = TextSecondary, fontSize = 13.sp)
+                Text(text = "Total Balance:", color = contentSecondary(), fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text       = "$currency ${"%.2f".format(balance)}",
-                    color      = TextPrimary,
+                    color      = contentPrimary(),
                     fontSize   = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -164,10 +169,10 @@ fun DashboardScreen(navController: NavController) {
                     Card(
                         modifier = Modifier.weight(1f),
                         shape    = RoundedCornerShape(12.dp),
-                        colors   = CardDefaults.cardColors(containerColor = NavyLight)
+                        colors   = CardDefaults.cardColors(containerColor = if (isDark) NavyLight else Color(0xFFF5F8FF))
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(text = "↑ Income", color = TextSecondary, fontSize = 11.sp)
+                            Text(text = "↑ Income", color = contentSecondary(), fontSize = 11.sp)
                             Text(
                                 text       = "$currency ${"%.2f".format(totalIncome)}",
                                 color      = LimeGreen,
@@ -179,10 +184,10 @@ fun DashboardScreen(navController: NavController) {
                     Card(
                         modifier = Modifier.weight(1f),
                         shape    = RoundedCornerShape(12.dp),
-                        colors   = CardDefaults.cardColors(containerColor = NavyLight)
+                        colors   = CardDefaults.cardColors(containerColor = if (isDark) NavyLight else Color(0xFFF5F8FF))
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(text = "↓ Expenses", color = TextSecondary, fontSize = 11.sp)
+                            Text(text = "↓ Expenses", color = contentSecondary(), fontSize = 11.sp)
                             Text(
                                 text       = "$currency ${"%.2f".format(totalSpent)}",
                                 color      = Color(0xFFFF6B6B),
@@ -213,14 +218,16 @@ fun DashboardScreen(navController: NavController) {
                     bgColor  = Color(0xFF1B3A6B),
                     textIcon = "EXP",
                     onClick  = { navController.navigate(NavRoutes.AddExpense.route) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isDark   = isDark
                 )
                 QuickActionButton(
                     label    = "Report",
                     bgColor  = Color(0xFF2E4A2E),
                     textIcon = "RPT",
                     onClick  = { navController.navigate(NavRoutes.Reports.route) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isDark   = isDark
                 )
             }
             Row(
@@ -232,14 +239,16 @@ fun DashboardScreen(navController: NavController) {
                     bgColor  = Color(0xFF1B4A3A),
                     textIcon = "AIM",
                     onClick  = { navController.navigate(NavRoutes.BudgetGoals.route) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isDark   = isDark
                 )
                 QuickActionButton(
                     label    = "Badges",
                     bgColor  = Color(0xFF4A3A1B),
                     textIcon = "XP",
                     onClick  = { navController.navigate(NavRoutes.Badges.route) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isDark   = isDark
                 )
             }
         }
@@ -256,7 +265,7 @@ fun DashboardScreen(navController: NavController) {
         ) {
             Text(
                 text          = "RECENT TRANSACTIONS",
-                color         = TextSecondary,
+                color         = contentSecondary(),
                 fontSize      = 11.sp,
                 fontWeight    = FontWeight.Bold,
                 letterSpacing = 0.1.sp
@@ -290,7 +299,7 @@ fun DashboardScreen(navController: NavController) {
             ) {
                 Text(
                     text      = "No transactions yet.\nTap + to add your first expense.",
-                    color     = TextSecondary,
+                    color     = contentSecondary(),
                     fontSize  = 14.sp,
                     textAlign = TextAlign.Center
                 )
@@ -316,12 +325,13 @@ private fun QuickActionButton(
     bgColor: Color,
     textIcon: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDark: Boolean
 ) {
     Card(
         modifier = modifier.clickable { onClick() },
         shape    = RoundedCornerShape(10.dp),
-        colors   = CardDefaults.cardColors(containerColor = NavyMedium)
+        colors   = CardDefaults.cardColors(containerColor = if (isDark) NavyMedium else Color.White)
     ) {
         Row(
             modifier              = Modifier
@@ -346,7 +356,7 @@ private fun QuickActionButton(
             }
             Text(
                 text       = label,
-                color      = TextPrimary,
+                color      = contentPrimary(),
                 fontSize   = 12.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -407,13 +417,13 @@ private fun TransactionRow(
             Column {
                 Text(
                     text       = categoryName,
-                    color      = TextPrimary,
+                    color      = contentPrimary(),
                     fontWeight = FontWeight.SemiBold,
                     fontSize   = 15.sp
                 )
                 Text(
                     text     = displayDate,
-                    color    = TextSecondary,
+                    color    = contentSecondary(),
                     fontSize = 12.sp
                 )
             }
@@ -438,5 +448,5 @@ private fun categoryColor(name: String): Color = when {
     name.contains("util",      ignoreCase = true) -> Color(0xFFF9A825)
     name.contains("health",    ignoreCase = true) -> Color(0xFFC62828)
     name.contains("entertain", ignoreCase = true) -> Color(0xFF283593)
-    else                                           -> Color(0xFF37474F)
+    else                                          -> Color(0xFF37474F)
 }

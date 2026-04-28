@@ -38,12 +38,15 @@ import com.st10448336.coincalm.ui.theme.TextHint
 import com.st10448336.coincalm.ui.theme.TextPrimary
 import com.st10448336.coincalm.ui.theme.TextSecondary
 import com.st10448336.coincalm.ui.theme.coinCalmTextFieldColors
+import com.st10448336.coincalm.ui.theme.contentPrimary
+import com.st10448336.coincalm.ui.theme.contentSecondary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Calendar
+import com.st10448336.coincalm.ui.theme.screenBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,7 +152,7 @@ fun AddExpenseScreen(navController: NavController) {
 
     Scaffold(
         snackbarHost   = { SnackbarHost(snackbarHostState) },
-        containerColor = NavyDark,
+        containerColor = screenBackground(),
         topBar = {
             CoinCalmTopBar(
                 title = "Add Expense",
@@ -166,7 +169,7 @@ fun AddExpenseScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(screenBackground())
                 .padding(padding)
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
@@ -326,14 +329,14 @@ fun AddExpenseScreen(navController: NavController) {
                     if (categories.isEmpty()) {
                         DropdownMenuItem(
                             text    = {
-                                Text("No categories yet — create one first", color = TextSecondary)
+                                Text("No categories yet — create one first", color = contentSecondary())
                             },
                             onClick = {}
                         )
                     }
                     categories.forEach { cat ->
                         DropdownMenuItem(
-                            text    = { Text(cat.categoryName, color = TextPrimary) },
+                            text    = { Text(cat.categoryName, color = contentPrimary()) },
                             onClick = {
                                 selectedCategory = cat
                                 dropdownExpanded = false
@@ -347,7 +350,7 @@ fun AddExpenseScreen(navController: NavController) {
             // ── Photo section ──────────────────────────────────────────────
             Text(
                 "Receipt Photo (optional)",
-                color = TextSecondary,
+                color = contentSecondary(),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -388,7 +391,7 @@ fun AddExpenseScreen(navController: NavController) {
                 color = when {
                     photoStatus.startsWith("✅") -> LimeGreen
                     photoStatus.startsWith("❌") -> ErrorRed
-                    else                         -> TextSecondary
+                    else                         -> contentSecondary()
                 },
                 style = MaterialTheme.typography.labelSmall
             )

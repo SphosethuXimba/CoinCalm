@@ -27,9 +27,11 @@ import com.st10448336.coincalm.ui.theme.NavyLight
 import com.st10448336.coincalm.ui.theme.TextHint
 import com.st10448336.coincalm.ui.theme.TextSecondary
 import com.st10448336.coincalm.ui.theme.coinCalmTextFieldColors
+import com.st10448336.coincalm.ui.theme.contentSecondary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.st10448336.coincalm.ui.theme.screenBackground
 
 /**
  * AddCategoryScreen — Skeleton screen for creating expense categories.
@@ -61,7 +63,7 @@ fun AddCategoryScreen(navController: NavController) {
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = NavyDark,
+        containerColor = screenBackground(),
         topBar = {
             CoinCalmTopBar(title = "New Category", onBack = { navController.popBackStack() })
         }
@@ -70,14 +72,14 @@ fun AddCategoryScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(screenBackground())
                 .padding(padding)
                 .padding(horizontal = 24.dp, vertical = 20.dp)
         ) {
             Text(
                 text  = "Create a spending category to organise your expenses.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = contentSecondary()
             )
 
             Spacer(Modifier.height(28.dp))
