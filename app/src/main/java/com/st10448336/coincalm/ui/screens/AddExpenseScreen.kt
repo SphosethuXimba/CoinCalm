@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -23,6 +25,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.window.Dialog
 import com.google.firebase.auth.FirebaseAuth
 import com.st10448336.coincalm.data.AppDatabase
 import com.st10448336.coincalm.data.entites.Category
@@ -35,7 +40,6 @@ import com.st10448336.coincalm.ui.theme.NavyDarkest
 import com.st10448336.coincalm.ui.theme.NavyLight
 import com.st10448336.coincalm.ui.theme.NavyMedium
 import com.st10448336.coincalm.ui.theme.TextHint
-import com.st10448336.coincalm.ui.theme.TextPrimary
 import com.st10448336.coincalm.ui.theme.TextSecondary
 import com.st10448336.coincalm.ui.theme.coinCalmTextFieldColors
 import com.st10448336.coincalm.ui.theme.contentPrimary
@@ -72,6 +76,7 @@ fun AddExpenseScreen(navController: NavController) {
     var photoStatus      by remember { mutableStateOf("No photo attached") }
     var supabaseImageUrl by remember { mutableStateOf<String?>(null) }
     var pendingImageUri  by remember { mutableStateOf<Uri?>(null) }
+    var previewExpanded  by remember { mutableStateOf(false) }
 
     // Field error states
     var amountError      by remember { mutableStateOf<String?>(null) }
@@ -120,6 +125,27 @@ fun AddExpenseScreen(navController: NavController) {
         }
     }
 
+    // ── Permission launcher for camera ─────────────────────────────────────
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val photoFile = File(
+                context.cacheDir,
+                "receipt_${System.currentTimeMillis()}.jpg"
+            )
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                photoFile
+            )
+            pendingImageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            photoStatus = "❌ Camera permission denied"
+        }
+    }
+
     // ── Pre-fill date with today ───────────────────────────────────────────
     LaunchedEffect(Unit) {
         val cal = Calendar.getInstance()
@@ -158,7 +184,7 @@ fun AddExpenseScreen(navController: NavController) {
                 title = "Add Expense",
                 onBack = {
                     navController.navigate("Dashboard") {
-                        popUpTo(0) { inclusive = true }   // clears entire back stack
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
@@ -356,17 +382,7 @@ fun AddExpenseScreen(navController: NavController) {
 
             OutlinedButton(
                 onClick = {
-                    val photoFile = File(
-                        context.cacheDir,
-                        "receipt_${System.currentTimeMillis()}.jpg"
-                    )
-                    val uri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.provider",
-                        photoFile
-                    )
-                    pendingImageUri = uri
-                    cameraLauncher.launch(uri)
+                    permissionLauncher.launch(android.Manifest.permission.CAMERA)
                 },
                 enabled  = !isLoading && !isUploading,
                 border   = androidx.compose.foundation.BorderStroke(1.dp, LimeGreen),
@@ -396,6 +412,83 @@ fun AddExpenseScreen(navController: NavController) {
                 style = MaterialTheme.typography.labelSmall
             )
 
+            // ── Photo preview ──────────────────────────────────────────────
+            if (pendingImageUri != null && !isUploading) {
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    "Receipt Preview",
+                    color = contentSecondary(),
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                // Full-screen dialog
+                if (previewExpanded) {
+                    Dialog(onDismissRequest = { previewExpanded = false }) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(NavyDarkest, RoundedCornerShape(12.dp))
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            AsyncImage(
+                                model              = supabaseImageUrl ?: pendingImageUri,
+                                contentDescription = "Receipt full view",
+                                contentScale       = ContentScale.Fit,
+                                modifier           = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 520.dp)
+                                    .background(NavyDark, RoundedCornerShape(8.dp))
+                            )
+                            TextButton(
+                                onClick  = { previewExpanded = false },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Close", color = LimeGreen)
+                            }
+                        }
+                    }
+                }
+
+                // Thumbnail — tap to expand
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .background(NavyDark, RoundedCornerShape(10.dp))
+                        .clickable { previewExpanded = true }
+                ) {
+                    AsyncImage(
+                        model              = supabaseImageUrl ?: pendingImageUri,
+                        contentDescription = "Receipt thumbnail",
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.fillMaxSize()
+                    )
+                    // Tap hint overlay
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .background(
+                                NavyDarkest.copy(alpha = 0.6f),
+                                RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+                            )
+                            .padding(vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Tap to expand",
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(6.dp))
 
             // ── Save Expense Button ────────────────────────────────────────
@@ -414,9 +507,9 @@ fun AddExpenseScreen(navController: NavController) {
                     if (amount.toFloatOrNull() == null) {
                         amountError = "Enter a valid amount"; valid = false
                     }
-                    if (date.isBlank())        { dateError        = "Date is required"; valid = false }
-                    if (startTime.isBlank())   { startTimeError   = "Required";         valid = false }
-                    if (endTime.isBlank())     { endTimeError     = "Required";         valid = false }
+                    if (date.isBlank())        { dateError        = "Date is required";        valid = false }
+                    if (startTime.isBlank())   { startTimeError   = "Required";                valid = false }
+                    if (endTime.isBlank())     { endTimeError     = "Required";                valid = false }
                     if (description.isBlank()) { descriptionError = "Description is required"; valid = false }
                     if (!valid) return@Button
 
@@ -440,7 +533,7 @@ fun AddExpenseScreen(navController: NavController) {
                                 isLoading = false
                                 snackbarHostState.showSnackbar("Expense saved!")
                                 navController.navigate("Dashboard") {
-                                    popUpTo(0) { inclusive = true }   // clears entire stack
+                                    popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
                                 }
                             }

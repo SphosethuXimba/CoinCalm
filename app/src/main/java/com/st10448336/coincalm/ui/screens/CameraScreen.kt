@@ -15,9 +15,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import com.st10448336.coincalm.data.repository.StorageRepository
+import com.st10448336.coincalm.navigation.NavRoutes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 @Composable
@@ -28,21 +30,26 @@ fun CameraScreen(navController: NavController) {
     var statusMessage by remember { mutableStateOf("Opening camera…") }
 
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
+        ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            val uri = imageUri
-            if (uri != null) {
+            imageUri?.let { uri ->
                 statusMessage = "Uploading receipt…"
                 val file = uriToFile(context, uri)
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val url = StorageRepository.uploadReceipt(file)
                         println("✅ Uploaded: $url")
-                        // No Room save — URL is only logged/used here
+                        withContext(Dispatchers.Main) {
+                            navController.navigate(NavRoutes.Dashboard.route) {
+                                popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
+                            }
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        println(" Upload failed: ${e.message}")
+                        withContext(Dispatchers.Main) {
+                            navController.popBackStack()
+                        }
                     }
                 }
             }
@@ -51,10 +58,20 @@ fun CameraScreen(navController: NavController) {
         }
     }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createImageUri(context)
+            imageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            navController.popBackStack()
+        }
+    }
+
     LaunchedEffect(Unit) {
-        val uri = createImageUri(context)
-        imageUri = uri
-        cameraLauncher.launch(uri)
+        permissionLauncher.launch(android.Manifest.permission.CAMERA)
     }
 
     Box(
