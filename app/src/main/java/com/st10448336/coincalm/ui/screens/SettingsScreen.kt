@@ -63,8 +63,7 @@ fun SettingsScreen(
     }
 
     // Show a loading spinner while fetching, but don't return early forever.
-    // If user is still null after the LaunchedEffect completes, show a
-    // recovery message instead of spinning indefinitely.
+    // If user is still null after the LaunchedEffect completes, show a recovery message instead of spinning indefinitely.
     if (currentUser == null) {
         Box(
             modifier         = Modifier

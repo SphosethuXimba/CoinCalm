@@ -107,7 +107,7 @@ fun DashboardScreen(navController: NavController) {
             .verticalScroll(rememberScrollState())
     ) {
 
-        // ── Greeting row ───────────────────────────────────────────────────
+        // Greeting row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -148,7 +148,7 @@ fun DashboardScreen(navController: NavController) {
             }
         }
 
-        // ── Balance card ───────────────────────────────────────────────────
+        // Balance card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -206,7 +206,7 @@ fun DashboardScreen(navController: NavController) {
 
         Spacer(Modifier.height(12.dp))
 
-        // ── 4 Quick action buttons (2x2 grid) ─────────────────────────────
+        //Quick action buttons (2x2 grid)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -259,7 +259,7 @@ fun DashboardScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        // ── Recent transactions header + Category button ───────────────────
+        // Recent transactions header + Category button
         Row(
             modifier              = Modifier
                 .fillMaxWidth()
@@ -293,7 +293,7 @@ fun DashboardScreen(navController: NavController) {
 
         Spacer(Modifier.height(8.dp))
 
-        // ── Transaction list ───────────────────────────────────────────────
+        // Transaction list
         if (recentExpenses.isEmpty()) {
             Box(
                 modifier         = Modifier
@@ -322,7 +322,7 @@ fun DashboardScreen(navController: NavController) {
     }
 }
 
-// ── Quick action button ────────────────────────────────────────────────────────
+// Quick action button
 @Composable
 private fun QuickActionButton(
     label: String,
@@ -368,7 +368,7 @@ private fun QuickActionButton(
     }
 }
 
-// ── Single transaction row ─────────────────────────────────────────────────────
+// Single transaction row
 @Composable
 private fun TransactionRow(
     expense: Expense,

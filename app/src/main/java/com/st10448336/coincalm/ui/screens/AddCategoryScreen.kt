@@ -38,7 +38,6 @@ import com.st10448336.coincalm.ui.theme.screenBackground
  *
  * REQUIREMENT-02: Dynamic Category Creation.
  *
- * TODO (Team): Add colour/icon picker before the DB insert call below.
  *
  * @author Sphosethu Ximba [ST10448336] — PROG7313 POE Part 2
  */
@@ -104,9 +103,6 @@ fun AddCategoryScreen(navController: NavController) {
                 modifier    = Modifier.fillMaxWidth()
             )
 
-            // TODO (Team): Add category colour/icon picker here
-            // Log.d(TAG, "TODO (Team): Show colour/icon picker before saving category")
-
             Spacer(Modifier.height(28.dp))
 
             Button(
@@ -122,7 +118,7 @@ fun AddCategoryScreen(navController: NavController) {
                     scope.launch(Dispatchers.IO) {
                         Log.d(TAG, "Inserting category '$categoryName' for UID: $uid")
 
-                        // ── TODO (Team): RoomDB Category Insert ───────────
+
                         // This is the actual database transaction.
                         val db          = AppDatabase.getInstance(context)
                         val newCategory = Category(userId = uid, categoryName = categoryName.trim())

@@ -13,7 +13,7 @@ import com.st10448336.coincalm.ui.theme.screenBackground
 @Composable
 fun CoinCalmTopBar(title: String, onBack: () -> Unit) {
     TopAppBar(
-        // 2. Call your dynamic function here instead of the static color
+        // Calling dynamic function here instead of the static color
         title = { Text(title, color = contentPrimary()) },
         navigationIcon = {
             IconButton(onClick = onBack) {
