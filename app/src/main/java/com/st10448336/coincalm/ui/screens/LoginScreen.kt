@@ -55,7 +55,7 @@ fun LoginScreen(navController: NavController) {
     val snackbarHost = remember { SnackbarHostState() }
     val sessionPrefs = remember { SessionPreferences(context) }
 
-    // ── State ──────────────────────────────────────────────────────────────
+    //  State
     // Pre-fill email from last login for convenience
     var email           by remember { mutableStateOf(sessionPrefs.getSavedEmail()) }
     var password        by remember { mutableStateOf("") }
@@ -66,7 +66,7 @@ fun LoginScreen(navController: NavController) {
     // Default to false — user must explicitly choose to stay logged in
     var rememberMe      by remember { mutableStateOf(false) }
 
-    // ── Real-time validation ───────────────────────────────────────────────
+    //  Real-time validation
     val emailIsValid    = email.isNotBlank() &&
             Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val passwordIsValid = password.isNotBlank()
@@ -107,7 +107,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(48.dp))
 
-            // ── Email ──────────────────────────────────────────────────────
+            // Email
             OutlinedTextField(
                 value         = email,
                 onValueChange = { rawInput ->
@@ -133,7 +133,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Password ───────────────────────────────────────────────────
+            // Password
             OutlinedTextField(
                 value         = password,
                 onValueChange = { password = it; passwordError = null },
@@ -188,7 +188,7 @@ fun LoginScreen(navController: NavController) {
                 modifier   = Modifier.fillMaxWidth()
             )
 
-            // ── Forgot password ────────────────────────────────────────────
+            //  Forgot password
             TextButton(
                 onClick  = {
                     if (email.isNotBlank()) {
@@ -209,7 +209,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(8.dp))
 
-            // ── Remember Me toggle ─────────────────────────────────────────
+            // Remember Me toggle
             Row(
                 modifier          = Modifier
                     .fillMaxWidth()
@@ -243,7 +243,7 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Sign In Button ─────────────────────────────────────────────
+            //  Sign In Button
             Button(
                 onClick = {
                     focusManager.clearFocus()

@@ -18,7 +18,7 @@ fun BottomNavBar(navController: NavController) {
         contentColor = TextPrimary
     ) {
 
-        // 🏠 HOME
+        //  HOME
         NavigationBarItem(
             selected = false,
             onClick = {
@@ -44,7 +44,7 @@ fun BottomNavBar(navController: NavController) {
             )
         )
 
-        // 📷 CAMERA
+        // CAMERA
         NavigationBarItem(
             selected = false,
             onClick = {
@@ -70,7 +70,7 @@ fun BottomNavBar(navController: NavController) {
             )
         )
 
-        // ⚙️ SETTINGS
+        // SETTINGS
         NavigationBarItem(
             selected = false,
             onClick = {

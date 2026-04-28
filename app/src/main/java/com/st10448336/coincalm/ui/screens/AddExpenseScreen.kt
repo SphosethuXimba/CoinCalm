@@ -58,7 +58,7 @@ fun AddExpenseScreen(navController: NavController) {
     val focusManager      = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // ── Compose State ──────────────────────────────────────────────────────
+    // Compose State
     var amount           by remember { mutableStateOf("") }
     var date             by remember { mutableStateOf("") }
     var startTime        by remember { mutableStateOf("") }
@@ -80,7 +80,7 @@ fun AddExpenseScreen(navController: NavController) {
     var endTimeError     by remember { mutableStateOf<String?>(null) }
     var descriptionError by remember { mutableStateOf<String?>(null) }
 
-    // ── Camera launcher ────────────────────────────────────────────────────
+    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -120,7 +120,7 @@ fun AddExpenseScreen(navController: NavController) {
         }
     }
 
-    // ── Pre-fill date with today ───────────────────────────────────────────
+    // Pre-fill date with today
     LaunchedEffect(Unit) {
         val cal = Calendar.getInstance()
         date = "%04d-%02d-%02d".format(
@@ -130,7 +130,7 @@ fun AddExpenseScreen(navController: NavController) {
         )
     }
 
-    // ── Load categories from DB ────────────────────────────────────────────
+    // Load categories from DB
     LaunchedEffect(Unit) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
         withContext(Dispatchers.IO) {
@@ -177,7 +177,7 @@ fun AddExpenseScreen(navController: NavController) {
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Amount ─────────────────────────────────────────────────────
+            // Amount
             OutlinedTextField(
                 value         = amount,
                 onValueChange = {
@@ -201,7 +201,7 @@ fun AddExpenseScreen(navController: NavController) {
                 modifier   = Modifier.fillMaxWidth()
             )
 
-            // ── Date picker ────────────────────────────────────────────────
+            // Date picker
             OutlinedTextField(
                 value          = date,
                 onValueChange  = {},
@@ -229,7 +229,7 @@ fun AddExpenseScreen(navController: NavController) {
                 }
             )
 
-            // ── Start time / End time ──────────────────────────────────────
+            // Start time / End time
             Row(
                 modifier              = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -284,7 +284,7 @@ fun AddExpenseScreen(navController: NavController) {
                 )
             }
 
-            // ── Description ────────────────────────────────────────────────
+            // Description
             OutlinedTextField(
                 value         = description,
                 onValueChange = {
@@ -302,7 +302,7 @@ fun AddExpenseScreen(navController: NavController) {
                 modifier   = Modifier.fillMaxWidth()
             )
 
-            // ── Category dropdown ──────────────────────────────────────────
+            //Category dropdown
             ExposedDropdownMenuBox(
                 expanded         = dropdownExpanded,
                 onExpandedChange = { dropdownExpanded = !dropdownExpanded },
@@ -347,7 +347,7 @@ fun AddExpenseScreen(navController: NavController) {
                 }
             }
 
-            // ── Photo section ──────────────────────────────────────────────
+            // Photo section
             Text(
                 "Receipt Photo (optional)",
                 color = contentSecondary(),
@@ -398,7 +398,7 @@ fun AddExpenseScreen(navController: NavController) {
 
             Spacer(Modifier.height(6.dp))
 
-            // ── Save Expense Button ────────────────────────────────────────
+            // Save Expense Button
             Button(
                 onClick = {
                     focusManager.clearFocus()

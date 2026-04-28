@@ -65,7 +65,7 @@ fun SplashScreen(navController: NavController) {
         val rememberMe   = sessionPrefs.isRememberMe()
 
         when {
-            // ── Case 1: Logged in AND user chose to stay signed in ─────────
+            // Case 1: Logged in AND user chose to stay signed in
             firebaseUser != null && rememberMe -> {
                 // Ensure RoomDB has this user (handles new device / clone)
                 UserSyncHelper.ensureUserInRoomDb(context)
@@ -74,7 +74,7 @@ fun SplashScreen(navController: NavController) {
                 }
             }
 
-            // ── Case 2: Firebase has a session but Remember Me is OFF ──────
+            // Case 2: Firebase has a session but Remember Me is OFF
             // This happens when:
             //  - A team member clones the repo (Firebase has no token → goes to Login anyway)
             //  - The user logged in on this device but didn't tick Remember Me
@@ -87,7 +87,7 @@ fun SplashScreen(navController: NavController) {
                 }
             }
 
-            // ── Case 3: No Firebase session at all ─────────────────────────
+            //  Case 3: No Firebase session at all
             else -> {
                 navController.navigate(NavRoutes.Login.route) {
                     popUpTo(NavRoutes.Splash.route) { inclusive = true }
@@ -96,7 +96,7 @@ fun SplashScreen(navController: NavController) {
         }
     }
 
-    // ── UI ─────────────────────────────────────────────────────────────────
+    //  UI
     Column(
         modifier              = Modifier
             .fillMaxSize()

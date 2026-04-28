@@ -50,7 +50,7 @@ fun ReportsHistoryScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val isDark  = LocalDarkMode.current
 
-    // ── Compose State ──────────────────────────────────────────────────────
+    //  Compose State
     var startDate      by remember { mutableStateOf("") }
     var endDate        by remember { mutableStateOf("") }
     var startDateError by remember { mutableStateOf<String?>(null) }

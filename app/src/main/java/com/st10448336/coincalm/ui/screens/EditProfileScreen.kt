@@ -44,7 +44,7 @@ fun EditProfileScreen(navController: NavController) {
     var currency     by remember { mutableStateOf("") }
     var isSaving     by remember { mutableStateOf(false) }
 
-    // ── Load current user ──────────────────────────────────────────────────────
+    // Load current user
     LaunchedEffect(Unit) {
         val uid = auth.currentUser?.uid ?: return@LaunchedEffect
         withContext(Dispatchers.IO) {
@@ -59,7 +59,7 @@ fun EditProfileScreen(navController: NavController) {
         }
     }
 
-    // ── Validation ─────────────────────────────────────────────────────────────
+    // Validation
     val incomeValue   = monthlyIncome.toFloatOrNull()
     val isSaveEnabled = username.length >= 3
             && incomeValue != null
@@ -74,7 +74,7 @@ fun EditProfileScreen(navController: NavController) {
             .verticalScroll(rememberScrollState())
     ) {
 
-        // ── Top bar ───────────────────────────────────────────────────────────
+        // Top bar
         Row(
             modifier          = Modifier
                 .fillMaxWidth()
@@ -103,7 +103,7 @@ fun EditProfileScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ── Username ──────────────────────────────────────────────────────
+            // Username
             OutlinedTextField(
                 value         = username,
                 onValueChange = { username = it },
@@ -118,7 +118,7 @@ fun EditProfileScreen(navController: NavController) {
                 colors   = coinCalmTextFieldColors()
             )
 
-            // ── Email (read-only) ─────────────────────────────────────────────
+            // Email (read-only)
             OutlinedTextField(
                 value         = currentUser?.email ?: "",
                 onValueChange = {},
@@ -129,7 +129,7 @@ fun EditProfileScreen(navController: NavController) {
                 colors        = coinCalmTextFieldColors()
             )
 
-            // ── Monthly income ────────────────────────────────────────────────
+            // Monthly income
             OutlinedTextField(
                 value         = monthlyIncome,
                 onValueChange = { monthlyIncome = it },
@@ -145,7 +145,7 @@ fun EditProfileScreen(navController: NavController) {
                 colors          = coinCalmTextFieldColors()
             )
 
-            // ── Currency ──────────────────────────────────────────────────────
+            // Currency
             OutlinedTextField(
                 value         = currency,
                 onValueChange = { currency = it.uppercase().take(3) },
@@ -162,7 +162,7 @@ fun EditProfileScreen(navController: NavController) {
 
             Spacer(Modifier.height(8.dp))
 
-            // ── Save button ───────────────────────────────────────────────────
+            // Save button
             Button(
                 onClick = {
                     scope.launch {

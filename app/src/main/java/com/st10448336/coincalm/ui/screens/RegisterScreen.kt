@@ -75,7 +75,7 @@ fun RegisterScreen(navController: NavController) {
     // rather than seeing a greyed-out button with no explanation.
 
     val usernameError: String? = when {
-        username.isEmpty()    -> null               // don't nag on empty yet
+        username.isEmpty()    -> null
         username.length < 3   -> "Username must be at least 3 characters"
         else                  -> null
     }
@@ -106,7 +106,7 @@ fun RegisterScreen(navController: NavController) {
         else                              -> null
     }
 
-    // ── Button enabled: ALL fields filled AND all errors null ─────────────
+    //  Button enabled: ALL fields filled AND all errors null
     val allFieldsFilled = username.isNotBlank()
             && email.isNotBlank()
             && password.isNotBlank()
@@ -214,7 +214,7 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Password ───────────────────────────────────────────────────
+            //  Password
             OutlinedTextField(
                 value         = password,
                 onValueChange = { password = it },
@@ -250,7 +250,7 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Confirm Password ───────────────────────────────────────────
+            // Confirm Password
             OutlinedTextField(
                 value         = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -275,7 +275,7 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Monthly Income ─────────────────────────────────────────────
+            //  Monthly Income
             OutlinedTextField(
                 value         = monthlyIncome,
                 onValueChange = { monthlyIncome = it },
@@ -299,7 +299,7 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Currency Dropdown ──────────────────────────────────────────
+            //  Currency Dropdown
             Text(
                 text  = "Currency",
                 style = MaterialTheme.typography.bodyMedium,
