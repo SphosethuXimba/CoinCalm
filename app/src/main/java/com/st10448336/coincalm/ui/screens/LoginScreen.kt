@@ -30,6 +30,7 @@ import com.st10448336.coincalm.navigation.NavRoutes
 import com.st10448336.coincalm.ui.theme.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.st10448336.coincalm.Validator
 
 // Attribution: Firebase Authentication Login Flow
 // Link: https://firebase.google.com/docs/auth/android/password-auth
@@ -50,7 +51,8 @@ fun LoginScreen(navController: NavController) {
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe      by remember { mutableStateOf(false) }
 
-    val emailIsValid    = email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val emailClean = email.trim().replace("\\s".toRegex(), "")
+    val emailIsValid = Validator.isValidEmail(emailClean)
     val isSignInEnabled = emailIsValid && password.isNotBlank() && !isLoading
 
     Scaffold(
@@ -159,7 +161,7 @@ private suspend fun performLogin(
     setEmailError: (String?) -> Unit, setPasswordError: (String?) -> Unit, setLoading: (Boolean) -> Unit,
     onSuccess: () -> Unit, showSnackbar: suspend (String) -> Unit
 ) {
-    val cleanEmail = email.trim().replace(Regex("\\s"), "").lowercase()
+    val cleanEmail = email.trim().replace("\\s".toRegex(), "").lowercase()
     if (cleanEmail.isBlank()) { setEmailError("Email required"); return }
     if (password.isBlank()) { setPasswordError("Password required"); return }
 

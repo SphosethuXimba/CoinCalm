@@ -33,6 +33,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import com.st10448336.coincalm.Validator
 
 // Attribution: Firebase Authentication Registration Flow
 // Link: https://firebase.google.com/docs/auth/android/password-auth
@@ -55,7 +56,12 @@ fun RegisterScreen(navController: NavController) {
     var rememberMe       by remember { mutableStateOf(true) }
 
     val usernameError = if (username.isNotEmpty() && username.length < 3) "Min 3 characters" else null
-    val emailError = if (email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email" else null
+    val emailClean = email.trim().replace("\\s".toRegex(), "")
+
+    val emailError =
+        if (email.isNotEmpty() && !Validator.isValidEmail(emailClean))
+            "Invalid email"
+        else null
     val passwordError = if (password.isNotEmpty() && password.length < 8) "Min 8 characters" else null
     val confirmError = if (confirmPassword.isNotEmpty() && confirmPassword != password) "Passwords do not match" else null
     val incomeError = if (monthlyIncome.isNotEmpty() && (monthlyIncome.toFloatOrNull() == null || monthlyIncome.toFloat() < 0)) "Invalid amount" else null

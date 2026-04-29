@@ -28,6 +28,7 @@ import com.st10448336.coincalm.navigation.NavRoutes
 import com.st10448336.coincalm.ui.theme.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.st10448336.coincalm.Validator
 
 // Attribution: Firebase Password Reset Implementation
 // Link: https://firebase.google.com/docs/auth/android/manage-users#send_a_password_reset_email
@@ -148,7 +149,7 @@ private fun StepInstruction(number: String, text: String) {
 }
 
 private suspend fun sendResetEmail(email: String, setLoading: (Boolean) -> Unit, setEmailError: (String?) -> Unit, onSent: () -> Unit, showSnackbar: suspend (String) -> Unit) {
-    val cleanEmail = email.trim().replace(Regex("\\s"), "").lowercase()
+    val cleanEmail = email.trim().replace("\\s".toRegex(), "").lowercase()
     setLoading(true)
     try {
         FirebaseAuth.getInstance().sendPasswordResetEmail(cleanEmail).await()
