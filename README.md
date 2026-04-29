@@ -19,7 +19,7 @@ CoinCalm uses Firebase Authentication, which dispatches secure, cryptographic to
 The application follows a strict, single-activity architecture utilizing Compose Navigation:
 
 1. **Splash Screen:** Acts as the routing gatekeeper. Checks for an active Firebase session and a local "Remember Me" preference. Routes to `Dashboard` if valid, otherwise routes to `Login`.
-2. **Auth Flow:** `LoginScreen` ↔ `RegisterScreen`. Users can also navigate to the standalone `ForgotPasswordScreen`.
+2. **Auth Flow:** `LoginScreen` - `RegisterScreen`. Users can also navigate to the standalone `ForgotPasswordScreen`.
 3. **Main Hub (Dashboard):** The central screen displaying the current balance, top 10 recent transactions, and quick-action navigation.
 4. **Bottom Navigation Access:** * **Home:** Returns to `DashboardScreen`.
    * **Camera:** Opens `CameraScreen` for quick receipt capture.
