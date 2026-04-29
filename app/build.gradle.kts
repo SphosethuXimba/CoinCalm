@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace  = "com.st10448336.coincalm"
-    compileSdk = 35   // AGP 8.x uses a plain integer here — the release() DSL is AGP 9.x only
+    compileSdk = 35
 
     defaultConfig {
         applicationId         = "com.st10448336.coincalm"

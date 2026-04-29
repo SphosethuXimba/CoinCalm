@@ -12,13 +12,7 @@ import com.st10448336.coincalm.ui.theme.*
 
 @Composable
 fun BottomNavBar(navController: NavController) {
-
-    NavigationBar(
-        containerColor = NavyDark,   // your app navy
-        contentColor = TextPrimary
-    ) {
-
-        //  HOME
+    NavigationBar(containerColor = NavyDark, contentColor = TextPrimary) {
         NavigationBarItem(
             selected = false,
             onClick = {
@@ -26,25 +20,14 @@ fun BottomNavBar(navController: NavController) {
                     popUpTo(NavRoutes.Dashboard.route) { inclusive = true }
                 }
             },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Home,
-                    contentDescription = "Home"
-                )
-            },
-            label = {
-                Text("Home")
-            },
+            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+            label = { Text("Home") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = LimeGreen,
-                selectedTextColor = LimeGreen,
-                unselectedIconColor = TextPrimary,
-                unselectedTextColor = TextPrimary,
+                selectedIconColor = LimeGreen, selectedTextColor = LimeGreen,
+                unselectedIconColor = TextPrimary, unselectedTextColor = TextPrimary,
                 indicatorColor = NavyMedium
             )
         )
-
-        // CAMERA
         NavigationBarItem(
             selected = false,
             onClick = {
@@ -52,25 +35,14 @@ fun BottomNavBar(navController: NavController) {
                     popUpTo(NavRoutes.Camera.route) { inclusive = true }
                 }
             },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.CameraAlt,
-                    contentDescription = "Camera"
-                )
-            },
-            label = {
-                Text("Camera")
-            },
+            icon = { Icon(Icons.Filled.CameraAlt, contentDescription = "Camera") },
+            label = { Text("Camera") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = LimeGreen,
-                selectedTextColor = LimeGreen,
-                unselectedIconColor = TextPrimary,
-                unselectedTextColor = TextPrimary,
+                selectedIconColor = LimeGreen, selectedTextColor = LimeGreen,
+                unselectedIconColor = TextPrimary, unselectedTextColor = TextPrimary,
                 indicatorColor = NavyMedium
             )
         )
-
-        // SETTINGS
         NavigationBarItem(
             selected = false,
             onClick = {
@@ -78,20 +50,11 @@ fun BottomNavBar(navController: NavController) {
                     popUpTo(NavRoutes.Settings.route) { inclusive = true }
                 }
             },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings"
-                )
-            },
-            label = {
-                Text("Settings")
-            },
+            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = LimeGreen,
-                selectedTextColor = LimeGreen,
-                unselectedIconColor = TextPrimary,
-                unselectedTextColor = TextPrimary,
+                selectedIconColor = LimeGreen, selectedTextColor = LimeGreen,
+                unselectedIconColor = TextPrimary, unselectedTextColor = TextPrimary,
                 indicatorColor = NavyMedium
             )
         )

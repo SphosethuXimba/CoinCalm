@@ -1,11 +1,9 @@
 package com.st10448336.coincalm.ui.screens
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import com.st10448336.coincalm.ui.theme.LimeGreen
-// 1. Swap the import from TextPrimary to contentPrimary
 import com.st10448336.coincalm.ui.theme.contentPrimary
 import com.st10448336.coincalm.ui.theme.screenBackground
 
@@ -13,19 +11,16 @@ import com.st10448336.coincalm.ui.theme.screenBackground
 @Composable
 fun CoinCalmTopBar(title: String, onBack: () -> Unit) {
     TopAppBar(
-        // Calling dynamic function here instead of the static color
         title = { Text(title, color = contentPrimary()) },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
-                    imageVector        = Icons.Default.ArrowBack,
+                    imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint               = LimeGreen
+                    tint               = contentPrimary()
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = screenBackground()
-        )
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = screenBackground())
     )
 }

@@ -13,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.st10448336.coincalm.navigation.NavRoutes
 import com.st10448336.coincalm.ui.components.BottomNavBar
 import com.st10448336.coincalm.ui.screens.*
@@ -22,15 +21,12 @@ import com.st10448336.coincalm.ui.theme.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            CoinCalmApp()
-        }
+        setContent { CoinCalmApp() }
     }
 }
 
 @Composable
 fun CoinCalmApp() {
-
     var darkMode      by remember { mutableStateOf(true) }
     val navController = rememberNavController()
 
@@ -39,25 +35,15 @@ fun CoinCalmApp() {
 
     CompositionLocalProvider(LocalDarkMode provides darkMode) {
         CoinCalmTheme(darkMode = darkMode) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color    = screenBackground()
-            ) {
+            Surface(modifier = Modifier.fillMaxSize(), color = screenBackground()) {
                 Scaffold(
                     bottomBar = {
-                        if (currentRoute != NavRoutes.Login.route &&
-                            currentRoute != NavRoutes.Register.route &&
-                            currentRoute != NavRoutes.Splash.route
-                        ) {
+                        if (currentRoute != NavRoutes.Login.route && currentRoute != NavRoutes.Register.route && currentRoute != NavRoutes.Splash.route && currentRoute != NavRoutes.ForgotPassword.route) {
                             BottomNavBar(navController)
                         }
                     }
                 ) { paddingValues ->
-                    NavHost(
-                        navController    = navController,
-                        startDestination = NavRoutes.Splash.route,
-                        modifier         = Modifier.padding(paddingValues)
-                    ) {
+                    NavHost(navController = navController, startDestination = NavRoutes.Splash.route, modifier = Modifier.padding(paddingValues)) {
                         composable(NavRoutes.Splash.route)    { SplashScreen(navController) }
                         composable(NavRoutes.Login.route)     { LoginScreen(navController) }
                         composable(NavRoutes.Register.route)  { RegisterScreen(navController) }
@@ -69,13 +55,8 @@ fun CoinCalmApp() {
                         composable(NavRoutes.Camera.route)      { CameraScreen(navController) }
                         composable(NavRoutes.Badges.route)      { BadgesScreen(navController) }
                         composable(NavRoutes.EditProfile.route) { EditProfileScreen(navController) }
-                        composable(NavRoutes.Settings.route) {
-                            SettingsScreen(
-                                navController    = navController,
-                                darkMode         = darkMode,
-                                onDarkModeToggle = { darkMode = it }
-                            )
-                        }
+                        composable(NavRoutes.ForgotPassword.route) { ForgotPasswordScreen(navController) }
+                        composable(NavRoutes.Settings.route) { SettingsScreen(navController, darkMode) { darkMode = it } }
                     }
                 }
             }

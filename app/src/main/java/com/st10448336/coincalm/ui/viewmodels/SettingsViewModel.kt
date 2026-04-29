@@ -9,26 +9,20 @@ import com.st10448336.coincalm.data.entites.User
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 
+/** ViewModel responsible for loading user settings asynchronously to persist state across UI recompositions. */
 class SettingsViewModel : ViewModel() {
-    private val _user = mutableStateOf<User?>(null) // To hold the user data
-    val user: State<User?> = _user // Public state to be observed
+    private val _user = mutableStateOf<User?>(null)
+    val user: State<User?> = _user
 
-    private val auth = FirebaseAuth.getInstance() // Firebase Auth instance
+    private val auth = FirebaseAuth.getInstance()
 
-    // Load user profile from Room and Firebase
     fun loadUserData(context: Context) {
-        val uid = auth.currentUser?.uid // Get the UID of the currently authenticated user
+        val uid = auth.currentUser?.uid ?: return
 
-        if (uid == null) {
-            // Handle no user session (redirect to login, for example)
-            return
-        }
-
-        // Load data from Room database (using the user's UID)
         viewModelScope.launch {
-            val db = AppDatabase.getInstance(context) // Get the Room database instance
-            val userFromDb = db.userDao().getUserById(uid) // Get user data from Room using UID
-            _user.value = userFromDb // Update the _user state with the user data
+            val db = AppDatabase.getInstance(context)
+            val userFromDb = db.userDao().getUserById(uid)
+            _user.value = userFromDb
         }
     }
 }
