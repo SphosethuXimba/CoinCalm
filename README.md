@@ -2,6 +2,11 @@
 
 CoinCalm is a modern, gamified personal finance and expense tracking application built natively for Android using Kotlin and Jetpack Compose. It empowers users to take control of their finances through intuitive tracking, period-based reporting, and an engaging achievement system.
 
+Github URL: https://github.com/Andiswa16/CoinCalm.git
+Youtube Video URL: https://youtu.be/tlrRR9wPAxA
+ 
+
+
 ## ⚠️ Critical Testing Notice: Real Emails Required
 To fully test and utilize the **Password Reset** and **In-App Password Change** features, **you MUST register with a real, accessible email address**. 
 CoinCalm uses Firebase Authentication, which dispatches secure, cryptographic token links to the registered inbox. If you register using a fake or dummy email (e.g., `test@fake.com`), Firebase will send the reset link into a void, and you will be unable to verify the password recovery flow for your POE.
