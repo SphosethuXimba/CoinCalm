@@ -64,7 +64,7 @@ To build and run this project locally:
 **1. Clone the repository:**
 
 ```bash
-git clone https://github.com/Andiswa16/CoinCalm.git
+https://github.com/SphosethuXimba/CoinCalm.git
 cd CoinCalm
 ```
 
