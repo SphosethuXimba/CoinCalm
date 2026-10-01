@@ -1,43 +1,88 @@
-# CoinCalm 🪙
+# 🪙 CoinCalm
 
-CoinCalm is a modern, gamified personal finance and expense tracking application built natively for Android using Kotlin and Jetpack Compose. It empowers users to take control of their finances through intuitive tracking, period-based reporting, and an engaging achievement system.
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9-7F52FF?logo=kotlin&logoColor=white)](#)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?logo=android&logoColor=white)](#)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth-FFCA28?logo=firebase&logoColor=black)](#)
+[![Supabase](https://img.shields.io/badge/Supabase-Storage-3ECF8E?logo=supabase&logoColor=white)](#)
 
-Github URL: https://github.com/Andiswa16/CoinCalm.git
-Youtube Video URL: https://youtu.be/tlrRR9wPAxA
- 
+CoinCalm is a modern, offline-first personal finance and expense tracking application built natively for Android. It empowers users to take control of their finances through intuitive tracking, custom reporting, and a gamified achievement system that rewards positive financial habits.
 
+---
 
-## ⚠️ Critical Testing Notice: Real Emails Required
-To fully test and utilize the **Password Reset** and **In-App Password Change** features, **you MUST register with a real, accessible email address**. 
-CoinCalm uses Firebase Authentication, which dispatches secure, cryptographic token links to the registered inbox. If you register using a fake or dummy email (e.g., `test@fake.com`), Firebase will send the reset link into a void, and you will be unable to verify the password recovery flow for your POE.
+## 🏗️ Architectural Overview
 
-## 🚀 Key Features
-* **User Authentication:** Secure login, registration, and session management using Firebase Auth.
-* **Smart Dashboard:** Real-time calculation of remaining balance, total income, and total expenses, featuring dynamic over-budget warnings.
-* **Expense & Category Management:** Create custom spending categories and log daily expenses.
-* **Receipt Capture:** Take photos of receipts using the device camera and securely upload them to Supabase Storage.
-* **Budget Goals:** Set a global monthly minimum and maximum spending band to keep finances on track.
-* **Gamification:** Earn XP, level up, and unlock visual badges for positive financial habits (e.g., maintaining a 7-day logging streak).
-* **Dynamic Theming:** Full support for system-level Light and Dark modes.
+The application is engineered using a **Single-Activity Architecture** and follows the **MVVM (Model-View-ViewModel)** design pattern to ensure a clean separation of concerns and highly testable code:
 
-## 🗺️ App Flow & Navigation Architecture
-The application follows a strict, single-activity architecture utilizing Compose Navigation:
+* **Presentation Layer:** Fully declarative UI built with Jetpack Compose and Material Design 3. Navigation is handled via Compose Navigation, ensuring stateful, type-safe routing.
+* **Offline-First Data Layer:** Financial records are cached locally using a **Room Database (SQLite)** , ensuring the app remains fully functional without an internet connection.
+* **Cloud & Media Layer:** Secure receipt image capture uploads directly to **Supabase Storage**, while user identity and session management are handled via **Firebase Authentication**.
 
-1. **Splash Screen:** Acts as the routing gatekeeper. Checks for an active Firebase session and a local "Remember Me" preference. Routes to `Dashboard` if valid, otherwise routes to `Login`.
-2. **Auth Flow:** `LoginScreen` - `RegisterScreen`. Users can also navigate to the standalone `ForgotPasswordScreen`.
-3. **Main Hub (Dashboard):** The central screen displaying the current balance, top 10 recent transactions, and quick-action navigation.
-4. **Bottom Navigation Access:** * **Home:** Returns to `DashboardScreen`.
-   * **Camera:** Opens `CameraScreen` for quick receipt capture.
-   * **Settings:** Opens `SettingsScreen` for theme toggling, profile editing, password changes, and secure logout.
-5. **Feature Screens (From Dashboard):**
-   * **Add Expense / Category:** Form screens to insert new RoomDB entities.
-   * **Reports:** `ReportsHistoryScreen` allows custom date-range filtering and aggregates category totals.
-   * **Goals & Badges:** `BudgetGoalsScreen` and `BadgesScreen` for tracking targets and XP.
+---
 
-## 🛠️ Tech Stack
-* **UI:** Jetpack Compose (Material Design 3)
-* **Local Database:** Room Database (SQLite)
-* **Authentication:** Firebase Auth
-* **Cloud Storage:** Supabase Storage
-* **Image Loading:** Coil
-* **Coroutines/Flow:** Asynchronous data handling
+## 🚀 Key Engineering Features
+
+* **Stateful Session Management:** Secure login, registration, and persistent session management using Firebase Auth, including cryptographic password recovery flows.
+* **Gamification Engine:** Custom logic to track user XP, level progressions, and dynamically unlock visual badges based on financial habits (e.g., maintaining a 7-day logging streak).
+* **Media & Hardware Integration:** Direct device camera integration for receipt capture, with secure binary uploads to Supabase Storage and asynchronous image rendering via **Coil**.
+* **Dynamic Budgeting Dashboard:** Real-time calculation algorithms computing remaining balances, tracking global monthly minimum/maximum spending bands, and triggering dynamic over-budget UI warnings.
+* **Custom Reporting:** A historical data aggregator that filters local RoomDB entities by custom date ranges to generate categorized spending reports.
+* **Theming:** Full support for system-level Light and Dark modes, leveraging Compose's dynamic color system.
+
+---
+
+## 🛠️ Technology Stack
+
+| Category | Technology |
+|-------|-----------|
+| **Language & UI** | Kotlin, Jetpack Compose, Material Design 3 |
+| **Architecture** | MVVM, Single-Activity, Compose Navigation |
+| **Local Database** | Room (SQLite) |
+| **Cloud Services** | Firebase Authentication, Supabase Storage |
+| **Asynchronous Operations**| Kotlin Coroutines, StateFlow |
+| **Image Loading** | Coil |
+
+---
+
+## 🗺️ Declarative UI Routing
+
+The app's navigation graph acts as a strict routing gatekeeper:
+
+1. **Splash Screen:** Validates active Firebase sessions and local `DataStore`/SharedPreferences. Routes to `Dashboard` if valid; otherwise, redirects to the `Auth Flow`.
+2. **Auth Flow:** Encapsulates `LoginScreen`, `RegisterScreen`, and `ForgotPasswordScreen`.
+3. **Main Hub (Dashboard):** Central state holder displaying current balances and recent transactions.
+4. **Bottom Navigation Graph:**
+   * **Home:** `DashboardScreen`
+   * **Camera:** `CameraScreen` (Hardware access)
+   * **Settings:** `SettingsScreen` (Theme toggling, profile management, secure logout)
+
+---
+
+## 💻 Quick Start (Local Development)
+
+To build and run this project locally:
+
+**1. Clone the repository:**
+
+```bash
+git clone https://github.com/Andiswa16/CoinCalm.git
+cd CoinCalm
+```
+
+**2. Open in Android Studio:**
+
+* Launch Android Studio and select **Open an existing project**.
+* Select the cloned CoinCalm directory.
+* Allow Gradle to sync and download dependencies.
+
+**3. Run the App:**
+
+* Select your preferred emulator or physical device.
+* Click **Run** (`Shift + F10`).
+
+---
+
+> [!WARNING]
+> **⚠️ Live Authentication Testing Notice**
+> To fully test and utilize the Password Reset and In-App Password Change features, you **MUST** register with a real, accessible email address.
+>
+> CoinCalm utilizes production-grade Firebase Authentication, which dispatches secure cryptographic token links to the registered inbox. If you register using a dummy email (e.g., `test@fake.com`), the reset link will bounce, and you will be unable to verify the password recovery workflow.
